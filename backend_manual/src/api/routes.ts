@@ -1,6 +1,8 @@
 import { Router, Express } from "express";
 import { executePayroll, getPayroll } from "./payroll.controller";
+import { getTreasuryBalance } from "./treasury.controller";
 import { x402Protect } from "../x402/middleware";
+import { checkFacilitatorHealth } from "../x402/facilitatorClient";
 
 /**
  * API Routes
@@ -16,6 +18,10 @@ router.post("/payroll/execute", x402Protect("payroll_execute"), executePayroll);
 // GET /api/payroll/:id - Public (read-only)
 router.get("/payroll/:id", getPayroll);
 
+// Treasury routes
+// GET /api/treasury/balance - Get treasury balance
+router.get("/treasury/balance", getTreasuryBalance);
+
 // Health check
 router.get("/health", (req, res) => {
   res.json({
@@ -23,6 +29,19 @@ router.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     version: "1.0.0",
   });
+});
+
+// Facilitator health check
+router.get("/facilitator/health", async (req, res) => {
+  try {
+    const health = await checkFacilitatorHealth();
+    res.status(health.healthy ? 200 : 503).json(health);
+  } catch (error) {
+    res.status(503).json({
+      healthy: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 });
 
 /**
