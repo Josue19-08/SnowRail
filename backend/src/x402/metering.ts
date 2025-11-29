@@ -13,11 +13,12 @@ export type MeterConfig = {
 };
 
 // Defined meters for SnowRail resources
+// NOTE: All configured for Fuji testnet
 export const meters: Record<string, MeterConfig> = {
   payroll_execute: {
     price: "1",
     asset: "USDC",
-    chain: "avalanche",
+    chain: "fuji", // Fuji testnet
     resource: "payroll_execution",
     description: "Execute international payroll for up to 10 freelancers",
     version: "8004-alpha",
@@ -25,7 +26,7 @@ export const meters: Record<string, MeterConfig> = {
   payment_single: {
     price: "0.1",
     asset: "USDC",
-    chain: "avalanche",
+    chain: "fuji", // Fuji testnet
     resource: "single_payment",
     description: "Execute a single payment to one recipient",
     version: "8004-alpha",
@@ -33,7 +34,7 @@ export const meters: Record<string, MeterConfig> = {
   swap_execute: {
     price: "0.5",
     asset: "USDC",
-    chain: "avalanche",
+    chain: "fuji", // Fuji testnet
     resource: "token_swap",
     description: "Execute a token swap through DEX",
     version: "8004-alpha",
