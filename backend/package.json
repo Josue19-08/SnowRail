@@ -9,6 +9,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsc && node dist/server.js",
+    "facilitator": "tsc && node dist/facilitator.js",
+    "facilitator:dev": "tsc && node dist/facilitator.js",
     "test": "npm run build && node dist/testClient.js",
     "test:shell": "bash test-request.sh",
     "clean": "rm -rf dist",
