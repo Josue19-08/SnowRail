@@ -1,9 +1,3 @@
-/**
- * Payroll Domain Types
- * Defines status constants and types for payroll operations
- */
-
-// Payroll status constants
 export const PayrollStatus = {
   PENDING: "PENDING",
   ONCHAIN_PAID: "ONCHAIN_PAID",
@@ -26,7 +20,8 @@ export type Payroll = {
 
 // Payroll with payments
 export type PayrollWithPayments = Payroll & {
-  payments: import("./payment").Payment[];
+  // NOTE: explicit .js extension for NodeNext resolution
+  payments: import("./payment.js").Payment[];
 };
 
 // API response type
