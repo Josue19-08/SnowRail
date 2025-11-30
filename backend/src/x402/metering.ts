@@ -47,6 +47,14 @@ export const meters: Record<string, MeterConfig> = {
     description: "Test Treasury contract operations (requestPayment, getTokenBalance, authorizeSwap, etc.)",
     version: "8004-alpha",
   },
+  payment_process: {
+    price: "0.1",
+    asset: "USDC",
+    chain: "fuji", // Fuji testnet
+    resource: "payment_processing",
+    description: "Complete payment flow: Rail + Blockchain + Facilitator integration",
+    version: "8004-alpha",
+  },
 };
 
 // Get meter by ID
