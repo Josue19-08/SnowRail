@@ -1,41 +1,70 @@
-import { useState } from "react";
-import { executePayroll } from "../lib/api";
+import { useState, useEffect } from "react";
+import { executePayroll, getPaymentProofFromFacilitator, checkFacilitatorHealth } from "../lib/api";
 import type { MeteringInfo } from "../App";
 import "./PaymentFlow.css";
 
 type PaymentFlowProps = {
   metering: MeteringInfo;
+  meterId?: string;
   onSuccess: (payrollId: string) => void;
   onCancel: () => void;
 };
 
-type FlowStep = "review" | "simulating" | "confirming";
+type FlowStep = "review" | "getting-proof" | "validating" | "executing" | "success";
 
-function PaymentFlow({ metering, onSuccess, onCancel }: PaymentFlowProps) {
+// Facilitator URL - integrated in backend server
+// Uses relative path since Vite proxy handles it
+const FACILITATOR_URL = import.meta.env.VITE_FACILITATOR_URL || "/facilitator";
+
+function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCancel }: PaymentFlowProps) {
   const [step, setStep] = useState<FlowStep>("review");
   const [error, setError] = useState<string | null>(null);
+  const [facilitatorStatus, setFacilitatorStatus] = useState<"checking" | "online" | "offline">("checking");
+  const [paymentProof, setPaymentProof] = useState<string | null>(null);
 
-  const handleSimulatePayment = async () => {
-    setStep("simulating");
+  // Check facilitator status on mount
+  useEffect(() => {
+    const checkFacilitator = async () => {
+      const isHealthy = await checkFacilitatorHealth(FACILITATOR_URL);
+      setFacilitatorStatus(isHealthy ? "online" : "offline");
+    };
+    checkFacilitator();
+  }, []);
+
+  const handleGetPaymentProof = async () => {
+    setStep("getting-proof");
     setError(null);
 
-    // Simulate wallet interaction delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    setStep("confirming");
-
     try {
-      // Execute with demo payment token
-      const result = await executePayroll("demo-token");
+      // Get payment proof from facilitator
+      const proof = await getPaymentProofFromFacilitator(
+        FACILITATOR_URL,
+        metering,
+        meterId
+      );
+      
+      setPaymentProof(proof);
+      setStep("validating");
+      
+      // Small delay to show validation step
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      
+      // Execute payroll with payment proof
+      setStep("executing");
+      const result = await executePayroll(proof);
 
       if (result.success) {
-        onSuccess(result.data.payrollId);
+        setStep("success");
+        // Small delay before redirecting
+        setTimeout(() => {
+          onSuccess(result.data.payrollId);
+        }, 1000);
       } else {
-        setError(result.error.message || "Payment failed");
+        setError(result.error.message || "Payment validation failed");
         setStep("review");
       }
     } catch (err) {
-      setError("Network error during payment");
+      setError(err instanceof Error ? err.message : "Failed to process payment");
       setStep("review");
     }
   };
@@ -77,18 +106,46 @@ function PaymentFlow({ metering, onSuccess, onCancel }: PaymentFlowProps) {
           </div>
         </div>
 
-        {/* Status */}
-        {step === "simulating" && (
-          <div className="status-message">
+        {/* Facilitator Status */}
+        {facilitatorStatus === "checking" && (
+          <div className="status-message info">
             <span className="spinner"></span>
-            Simulating wallet transaction...
+            Checking facilitator status...
+          </div>
+        )}
+        {facilitatorStatus === "offline" && (
+          <div className="status-message warning">
+            <span>⚠️</span>
+            Facilitator offline - using demo-token for testing
           </div>
         )}
 
-        {step === "confirming" && (
+        {/* Status Messages */}
+        {step === "getting-proof" && (
+          <div className="status-message">
+            <span className="spinner"></span>
+            Getting payment proof from facilitator...
+          </div>
+        )}
+
+        {step === "validating" && (
+          <div className="status-message">
+            <span className="spinner"></span>
+            Validating payment proof...
+          </div>
+        )}
+
+        {step === "executing" && (
+          <div className="status-message">
+            <span className="spinner"></span>
+            Executing payroll with validated payment...
+          </div>
+        )}
+
+        {step === "success" && (
           <div className="status-message success">
             <span className="check">✓</span>
-            Payment confirmed. Executing payroll...
+            Payment validated! Payroll executed successfully.
           </div>
         )}
 
@@ -101,27 +158,39 @@ function PaymentFlow({ metering, onSuccess, onCancel }: PaymentFlowProps) {
               <button
                 className="btn btn-secondary"
                 onClick={onCancel}
+                disabled={facilitatorStatus === "checking"}
               >
                 Cancel
               </button>
               <button
                 className="btn btn-primary"
-                onClick={handleSimulatePayment}
+                onClick={handleGetPaymentProof}
+                disabled={facilitatorStatus === "checking"}
               >
-                <span>⚡</span>
-                Simulate Onchain Payment
+                <span>💳</span>
+                Get Payment Proof & Execute
               </button>
             </>
+          )}
+          {(step === "getting-proof" || step === "validating" || step === "executing") && (
+            <button className="btn btn-secondary" disabled>
+              <span className="spinner"></span>
+              Processing...
+            </button>
           )}
         </div>
 
         {/* Footer info */}
         <div className="payment-footer">
           <p>
-            <strong>Demo Mode:</strong> Click "Simulate Onchain Payment" to
-            proceed with a mock payment. In production, this would trigger
-            your wallet to sign a transaction.
+            <strong>Agent Flow:</strong> This automatically gets a payment proof from the facilitator,
+            validates it, and executes the payroll. In production, this would use real on-chain payments.
           </p>
+          {facilitatorStatus === "online" && (
+            <p className="facilitator-status">
+              ✅ Facilitator connected: {FACILITATOR_URL}
+            </p>
+          )}
         </div>
       </div>
     </div>
