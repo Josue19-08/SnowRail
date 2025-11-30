@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Script de Validación de Agente
- * Valida que un agente específico:
- * 1. Llame al contrato (a través del facilitator)
- * 2. Genere la transacción on-chain
- * 3. Sea validado con el facilitator
+ * Agent Validation Script
+ * Validates that a specific agent:
+ * 1. Calls the contract (through the facilitator)
+ * 2. Generates the on-chain transaction
+ * 3. Is validated with the facilitator
  * 
- * Uso: node validate-agent-transaction.js <agentId>
- * Ejemplo: node validate-agent-transaction.js 7bf11fb2-f821-45c2-bf7b-f12e7e10bc59
+ * Usage: node validate-agent-transaction.js <agentId>
+ * Example: node validate-agent-transaction.js 7bf11fb2-f821-45c2-bf7b-f12e7e10bc59
  */
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
 const FACILITATOR_URL = process.env.FACILITATOR_URL || `${BACKEND_URL}/facilitator`;
 const AGENT_ID = process.argv[2] || "7bf11fb2-f821-45c2-bf7b-f12e7e10bc59";
 
-// Colores para la consola
+// Console colors
 const colors = {
   reset: '\x1b[0m',
   green: '\x1b[32m',
@@ -56,38 +56,38 @@ function logInfo(message) {
 }
 
 /**
- * Paso 1: Verificar que el facilitator esté funcionando
+ * Step 1: Verify that the facilitator is working
  */
 async function step1_CheckFacilitatorHealth() {
-  logStep('1️⃣', 'Verificando salud del facilitator...');
+  logStep('1️⃣', 'Checking facilitator health...');
   
   try {
     const response = await fetch(`${FACILITATOR_URL}/health`);
     
     if (!response.ok) {
-      logError(`Facilitator no responde correctamente: ${response.status}`);
+      logError(`Facilitator not responding correctly: ${response.status}`);
       return false;
     }
     
     const health = await response.json();
-    logSuccess('Facilitator está funcionando');
+    logSuccess('Facilitator is working');
     logInfo(`   Network: ${health.network || 'N/A'}`);
     logInfo(`   Status: ${health.status || 'N/A'}`);
     logInfo(`   Timestamp: ${health.timestamp || 'N/A'}`);
     
     return true;
   } catch (error) {
-    logError(`No se puede conectar al facilitator: ${error.message}`);
+    logError(`Cannot connect to facilitator: ${error.message}`);
     logWarning(`   URL: ${FACILITATOR_URL}`);
     return false;
   }
 }
 
 /**
- * Paso 2: Simular una solicitud del agente y verificar que se requiere pago
+ * Step 2: Simulate an agent request and verify that payment is required
  */
 async function step2_RequestPaymentRequirement() {
-  logStep('2️⃣', 'Simulando solicitud del agente (sin pago)...');
+  logStep('2️⃣', 'Simulating agent request (without payment)...');
   
   try {
     const message = {
@@ -119,7 +119,7 @@ async function step2_RequestPaymentRequirement() {
     const data = await response.json();
 
     if (response.status === 200 && data.error === 'Payment Required') {
-      logSuccess('Backend correctamente requiere pago');
+      logSuccess('Backend correctly requires payment');
       logInfo(`   Task ID: ${data.task?.id || 'N/A'}`);
       logInfo(`   Context ID: ${data.task?.contextId || 'N/A'}`);
       
@@ -133,46 +133,46 @@ async function step2_RequestPaymentRequirement() {
       
       return { paymentRequired, task: data.task };
     } else {
-      logWarning(`Respuesta inesperada: ${response.status}`);
+      logWarning(`Unexpected response: ${response.status}`);
       logInfo(`   Response: ${JSON.stringify(data, null, 2)}`);
       return null;
     }
   } catch (error) {
-    logError(`Error en la solicitud: ${error.message}`);
+    logError(`Error in request: ${error.message}`);
     return null;
   }
 }
 
 /**
- * Paso 3: Crear un payment proof y validarlo con el facilitator
+ * Step 3: Create a payment proof and validate it with the facilitator
  */
 async function step3_ValidatePaymentWithFacilitator(paymentRequired) {
-  logStep('3️⃣', 'Validando pago con el facilitator...');
+  logStep('3️⃣', 'Validating payment with facilitator...');
   
   if (!paymentRequired) {
-    logError('No se puede validar sin payment requirements');
+    logError('Cannot validate without payment requirements');
     return null;
   }
 
   try {
     const accept = paymentRequired.accepts?.[0];
     if (!accept) {
-      logError('No se encontraron payment requirements válidos');
+      logError('No valid payment requirements found');
       return null;
     }
 
-    // Crear un payment proof de prueba (simplificado para testnet)
+    // Create a test payment proof (simplified for testnet)
     const paymentProof = {
-      from: "0x22f6F000609d52A0b0efCD4349222cd9d70716Ba", // Wallet de prueba
+      from: "0x22f6F000609d52A0b0efCD4349222cd9d70716Ba", // Test wallet
       to: accept.payTo,
       value: accept.maxAmountRequired,
       validAfter: Math.floor(Date.now() / 1000),
-      validBefore: Math.floor(Date.now() / 1000) + 3600, // 1 hora
+      validBefore: Math.floor(Date.now() / 1000) + 3600, // 1 hour
       nonce: `0x${Math.random().toString(16).substring(2, 18).padStart(64, '0')}`,
-      signature: "0x" + "0".repeat(130), // Firma simplificada para testnet
+      signature: "0x" + "0".repeat(130), // Simplified signature for testnet
     };
 
-    logInfo('Enviando payment proof al facilitator para validación...');
+    logInfo('Sending payment proof to facilitator for validation...');
     
     const validateResponse = await fetch(`${FACILITATOR_URL}/validate`, {
       method: 'POST',
@@ -191,33 +191,33 @@ async function step3_ValidatePaymentWithFacilitator(paymentRequired) {
     const validation = await validateResponse.json();
     
     if (validation.valid) {
-      logSuccess('Facilitator validó el payment proof');
+      logSuccess('Facilitator validated the payment proof');
       logInfo(`   Payer: ${validation.payer || 'N/A'}`);
       logInfo(`   Amount: ${validation.amount || 'N/A'}`);
       return { paymentProof, validation };
     } else {
-      logWarning(`Facilitator rechazó el proof: ${validation.error || 'Unknown error'}`);
+      logWarning(`Facilitator rejected the proof: ${validation.error || 'Unknown error'}`);
       logInfo(`   Message: ${validation.message || 'N/A'}`);
       
-      // Para testnet, el facilitator puede aceptar "demo-token"
+      // For testnet, the facilitator may accept "demo-token"
       if (accept.network?.includes('test') || accept.network?.includes('fuji')) {
-        logInfo('   Usando demo-token para testnet...');
+        logInfo('   Using demo-token for testnet...');
         return { paymentProof: 'demo-token', validation: { valid: true } };
       }
       
       return null;
     }
   } catch (error) {
-    logError(`Error validando con facilitator: ${error.message}`);
+    logError(`Error validating with facilitator: ${error.message}`);
     return null;
   }
 }
 
 /**
- * Paso 4: Enviar solicitud con pago y verificar que se ejecute la transacción
+ * Step 4: Send request with payment and verify that the transaction is executed
  */
 async function step4_SendRequestWithPayment(paymentProof, task) {
-  logStep('4️⃣', 'Enviando solicitud con pago y verificando transacción...');
+  logStep('4️⃣', 'Sending request with payment and verifying transaction...');
   
   try {
     const message = {
@@ -245,7 +245,7 @@ async function step4_SendRequestWithPayment(paymentProof, task) {
       },
     };
 
-    logInfo('Enviando solicitud con payment proof...');
+    logInfo('Sending request with payment proof...');
     
     const response = await fetch(`${BACKEND_URL}/process`, {
       method: 'POST',
@@ -262,25 +262,25 @@ async function step4_SendRequestWithPayment(paymentProof, task) {
     const data = await response.json();
 
     if (response.ok && data.settlement) {
-      logSuccess('Solicitud procesada y pago ejecutado');
+      logSuccess('Request processed and payment executed');
       
-      // Verificar validación con facilitator
+      // Verify validation with facilitator
       if (data.task?.metadata?.['x402.payment.status'] === 'payment-verified') {
-        logSuccess('✅ Pago validado con facilitator');
+        logSuccess('✅ Payment validated with facilitator');
       } else {
-        logWarning(`Estado de validación: ${data.task?.metadata?.['x402.payment.status'] || 'N/A'}`);
+        logWarning(`Validation status: ${data.task?.metadata?.['x402.payment.status'] || 'N/A'}`);
       }
       
-      // Verificar transacción on-chain
+      // Verify on-chain transaction
       if (data.settlement.success && data.settlement.transaction) {
-        logSuccess('✅ Transacción generada on-chain');
+        logSuccess('✅ Transaction generated on-chain');
         logInfo(`   Transaction Hash: ${data.settlement.transaction}`);
         logInfo(`   Network: ${data.settlement.network || 'N/A'}`);
         logInfo(`   Payer: ${data.settlement.payer || 'N/A'}`);
         
-        // Verificar que la transacción existe en el blockchain
+        // Verify that the transaction exists on the blockchain
         if (data.settlement.network && !data.settlement.network.includes('test')) {
-          logInfo('   ⚠️  Verifica la transacción en el explorer del blockchain');
+          logInfo('   ⚠️  Verify the transaction in the blockchain explorer');
         }
         
         return {
@@ -291,7 +291,7 @@ async function step4_SendRequestWithPayment(paymentProof, task) {
           task: data.task,
         };
       } else {
-        logError('❌ No se generó transacción on-chain');
+        logError('❌ No on-chain transaction generated');
         logInfo(`   Error: ${data.settlement.errorReason || 'Unknown error'}`);
         return {
           success: false,
@@ -299,61 +299,61 @@ async function step4_SendRequestWithPayment(paymentProof, task) {
         };
       }
     } else if (response.status === 402) {
-      logError('Pago rechazado por el backend');
+      logError('Payment rejected by backend');
       logInfo(`   Error: ${data.error || 'Unknown error'}`);
       logInfo(`   Reason: ${data.reason || 'N/A'}`);
       return { success: false, error: data.error };
     } else {
-      logError(`Error inesperado: ${response.status}`);
+      logError(`Unexpected error: ${response.status}`);
       logInfo(`   Response: ${JSON.stringify(data, null, 2)}`);
       return { success: false, error: 'Unexpected response' };
     }
   } catch (error) {
-    logError(`Error enviando solicitud: ${error.message}`);
+    logError(`Error sending request: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
 
 /**
- * Paso 5: Verificar que el facilitator realmente validó la transacción
+ * Step 5: Verify that the facilitator actually validated the transaction
  */
 async function step5_VerifyFacilitatorValidation(transactionHash, network) {
-  logStep('5️⃣', 'Verificando validación del facilitator...');
+  logStep('5️⃣', 'Verifying facilitator validation...');
   
   if (!transactionHash) {
-    logWarning('No hay transaction hash para verificar');
+    logWarning('No transaction hash to verify');
     return false;
   }
 
   try {
-    // Verificar que el facilitator puede validar transacciones
-    logInfo('Verificando capacidad de validación del facilitator...');
+    // Verify that the facilitator can validate transactions
+    logInfo('Checking facilitator validation capability...');
     
-    // El facilitator debería tener logs o un endpoint para verificar transacciones
-    // Por ahora, verificamos que el endpoint de health funciona
+    // The facilitator should have logs or an endpoint to verify transactions
+    // For now, we verify that the health endpoint works
     const healthResponse = await fetch(`${FACILITATOR_URL}/health`);
     
     if (healthResponse.ok) {
-      logSuccess('Facilitator está operativo y puede validar transacciones');
+      logSuccess('Facilitator is operational and can validate transactions');
       logInfo(`   Transaction Hash: ${transactionHash}`);
       logInfo(`   Network: ${network || 'N/A'}`);
-      logInfo(`   ⚠️  Nota: Verifica manualmente en el explorer del blockchain`);
+      logInfo(`   ⚠️  Note: Verify manually in the blockchain explorer`);
       return true;
     } else {
-      logError('Facilitator no responde correctamente');
+      logError('Facilitator not responding correctly');
       return false;
     }
   } catch (error) {
-    logError(`Error verificando facilitator: ${error.message}`);
+    logError(`Error verifying facilitator: ${error.message}`);
     return false;
   }
 }
 
 /**
- * Función principal
+ * Main function
  */
 async function validateAgentTransaction() {
-  logSection(`Validación de Agente: ${AGENT_ID}`);
+  logSection(`Agent Validation: ${AGENT_ID}`);
   logInfo(`Backend URL: ${BACKEND_URL}`);
   logInfo(`Facilitator URL: ${FACILITATOR_URL}`);
   
@@ -365,50 +365,50 @@ async function validateAgentTransaction() {
     facilitatorVerified: false,
   };
 
-  // Paso 1: Verificar facilitator
+  // Step 1: Verify facilitator
   results.facilitatorHealth = await step1_CheckFacilitatorHealth();
   if (!results.facilitatorHealth) {
-    logError('\n❌ Validación falló: Facilitator no está disponible');
+    logError('\n❌ Validation failed: Facilitator is not available');
     process.exit(1);
   }
 
-  // Paso 2: Solicitar payment requirement
+  // Step 2: Request payment requirement
   const paymentData = await step2_RequestPaymentRequirement();
   if (!paymentData) {
-    logError('\n❌ Validación falló: No se pudo obtener payment requirements');
+    logError('\n❌ Validation failed: Could not get payment requirements');
     process.exit(1);
   }
   results.paymentRequired = true;
 
-  // Paso 3: Validar con facilitator
+  // Step 3: Validate with facilitator
   const validationData = await step3_ValidatePaymentWithFacilitator(
     paymentData.paymentRequired
   );
   if (!validationData) {
-    logError('\n❌ Validación falló: Facilitator no validó el pago');
+    logError('\n❌ Validation failed: Facilitator did not validate payment');
     process.exit(1);
   }
   results.facilitatorValidation = true;
 
-  // Paso 4: Enviar solicitud con pago
+  // Step 4: Send request with payment
   const transactionData = await step4_SendRequestWithPayment(
     validationData.paymentProof,
     paymentData.task
   );
   if (!transactionData.success) {
-    logError('\n❌ Validación falló: No se generó transacción');
+    logError('\n❌ Validation failed: Transaction was not generated');
     process.exit(1);
   }
   results.transactionGenerated = true;
 
-  // Paso 5: Verificar validación del facilitator
+  // Step 5: Verify facilitator validation
   results.facilitatorVerified = await step5_VerifyFacilitatorValidation(
     transactionData.transaction,
     transactionData.network
   );
 
-  // Resumen final
-  logSection('Resumen de Validación');
+  // Final summary
+  logSection('Validation Summary');
   
   const checks = [
     { name: 'Facilitator Health', result: results.facilitatorHealth },
@@ -429,7 +429,7 @@ async function validateAgentTransaction() {
   console.log('\n');
   
   if (transactionData.transaction) {
-    logSection('Detalles de la Transacción');
+    logSection('Transaction Details');
     logInfo(`Transaction Hash: ${transactionData.transaction}`);
     logInfo(`Network: ${transactionData.network || 'N/A'}`);
     logInfo(`Payer: ${transactionData.payer || 'N/A'}`);
@@ -440,21 +440,21 @@ async function validateAgentTransaction() {
   const allPassed = Object.values(results).every((r) => r === true);
   
   if (allPassed) {
-    logSuccess('🎉 ¡Todas las validaciones pasaron!');
-    logInfo('El agente correctamente:');
-    logInfo('   ✅ Llamó al contrato (a través del facilitator)');
-    logInfo('   ✅ Generó la transacción on-chain');
-    logInfo('   ✅ Fue validado con el facilitator');
+    logSuccess('🎉 All validations passed!');
+    logInfo('The agent correctly:');
+    logInfo('   ✅ Called the contract (through the facilitator)');
+    logInfo('   ✅ Generated the on-chain transaction');
+    logInfo('   ✅ Was validated with the facilitator');
     process.exit(0);
   } else {
-    logError('❌ Algunas validaciones fallaron');
+    logError('❌ Some validations failed');
     process.exit(1);
   }
 }
 
-// Ejecutar validación
+// Run validation
 validateAgentTransaction().catch((error) => {
-  logError(`\n❌ Error fatal: ${error.message}`);
+  logError(`\n❌ Fatal error: ${error.message}`);
   console.error(error);
   process.exit(1);
 });
