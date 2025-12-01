@@ -3,7 +3,7 @@
 // Status fields are stored as String for SQLite compatibility
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
