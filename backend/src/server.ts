@@ -23,6 +23,8 @@ import {
 import { createFacilitatorRouter } from "./x402/facilitatorServer.js";
 import { x402Protect } from "./x402/middleware.js";
 import { config } from "./config/env.js";
+import { getAgentIdentity } from "./x402/agentIdentity.js";
+import { registerAgentRoutes } from "./api/agentRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -234,6 +236,9 @@ registerPayrollRoutes(app);
 // Register integrated payment routes (replaces old agent/facilitator test endpoints)
 registerPaymentRoutes(app);
 
+// Register agent routes (identity, activity, stats)
+registerAgentRoutes(app);
+
 // Register Treasury API routes
 app.get("/api/treasury/balance", getTreasuryBalance);
 app.post("/api/treasury/test", x402Protect("contract_test"), testContract);
@@ -256,6 +261,17 @@ app.get('/health', (req, res) => {
       price: '$0.10',
     },
   });
+});
+
+/**
+ * ERC-8004 Agent Identity Card
+ * Allows other AI agents to discover SnowRail's capabilities
+ * Part of Sovereign Agent Stack: Identity & Reputation Layer
+ */
+app.get('/agent/identity', (req, res) => {
+  console.log('🤖 Agent identity card requested');
+  const identity = getAgentIdentity();
+  res.json(identity);
 });
 
 /**

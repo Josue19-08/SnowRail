@@ -12,6 +12,8 @@ import {
   checkTreasuryBalance,
 } from "./contractHook.js";
 import { logger } from "../utils/logger.js";
+import { saveReceiptToArweave, type PayrollReceipt } from "./arweaveService.js";
+import { config } from "../config/env.js";
 
 // Demo payments (amounts in cents)
 const DEMO_PAYMENTS = [
@@ -113,12 +115,51 @@ export async function executePayrollDemo() {
     const finalPaymentStatus =
       railResult.status === "PAID" ? PaymentStatus.PAID : PaymentStatus.FAILED;
 
-    await prisma.payroll.update({
+    const updatedPayroll = await prisma.payroll.update({
       where: { id: payroll.id },
       data: { status: finalStatus },
     });
     await updatePayrollPaymentsStatus(payroll.id, finalPaymentStatus);
     logger.info(`Payroll completed with status: ${finalStatus}`);
+
+    // Save permanent receipt to Arweave (Sovereign Agent Stack: Memory Layer)
+    if (finalStatus === PayrollStatus.PAID) {
+      try {
+        // Fetch payroll with payments for complete receipt
+        const payrollWithPayments = await prisma.payroll.findUnique({
+          where: { id: payroll.id },
+          include: { payments: true }
+        });
+
+        if (payrollWithPayments) {
+          const receipt: PayrollReceipt = {
+            payrollId: payroll.id,
+            status: finalStatus,
+            totalAmount: total.toString(),
+            currency,
+            recipientCount: payrollWithPayments.payments.length,
+            network: config.network,
+            treasuryContract: config.treasuryContractAddress,
+            onchainTxHash: undefined, // Transaction hashes are individual per payment
+            createdAt: payroll.createdAt.toISOString(),
+            completedAt: new Date().toISOString(),
+            version: '1.0.0',
+            protocol: 'snowrail-payroll-v1',
+            agentId: 'snowrail-treasury-v1',
+            x402MeterId: 'payroll_execute',
+          };
+
+          const arweaveResult = await saveReceiptToArweave(receipt);
+          if (arweaveResult.success) {
+            logger.info(`📦 Receipt saved to Arweave: ${arweaveResult.url}`);
+            // Optionally store the arweave URL in the database
+            // You'd need to add arweaveUrl field to your Prisma schema
+          }
+        }
+      } catch (arweaveError) {
+        logger.warn('Failed to save receipt to Arweave, but payroll completed', arweaveError);
+      }
+    }
   } catch (error) {
     logger.warn("Rail processing failed, but on-chain payments were executed", error);
   }
