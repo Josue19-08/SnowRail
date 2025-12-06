@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { executePayroll } from "../lib/api";
 import type { MeteringInfo } from "../App";
-import { CreditCard, Wallet, Box, ArrowRight, Zap, Shield, BarChart3, Activity, Globe, DollarSign, Sparkles } from "lucide-react";
+import { CreditCard, Wallet, Box, ArrowRight, Zap, Shield, Activity, Globe, DollarSign, Sparkles } from "lucide-react";
 
 type DashboardProps = {
   onPaymentRequired: (metering: MeteringInfo) => void;
