@@ -241,7 +241,49 @@ export function createFacilitatorRouter(): Router {
         meter.chain
       );
 
-      if (settlementResult.success) {
+      if (settlementResult.success && settlementResult.transactionHash) {
+        // Extract paymentIntentId from paymentRequirements if present
+        const paymentIntentId = (paymentRequirements as any)?.extra?.metadata?.paymentIntentId;
+        
+        // If this is a merchant payment (has paymentIntentId), call internal callback
+        if (paymentIntentId) {
+          try {
+            const callbackUrl = `${config.x402FacilitatorUrl.replace("/facilitator", "")}/internal/x402/callback`;
+            const callbackSecret = process.env.X402_CALLBACK_SECRET;
+            
+            // Extract token from requirements or use default
+            const token = (paymentRequirements as any)?.extra?.name || "xUSDC";
+            // Convert atomic amount back to token units (6 decimals for USDC)
+            const amount = Number(validationResult.amount || "0") / 1_000_000;
+            
+            const callbackResponse = await fetch(callbackUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(callbackSecret ? { "X-Callback-Secret": callbackSecret } : {}),
+              },
+              body: JSON.stringify({
+                paymentIntentId,
+                token,
+                amount,
+                txHash: settlementResult.transactionHash,
+                timestamp: new Date().toISOString(),
+              }),
+            });
+
+            if (callbackResponse.ok) {
+              logger.info(`Callback successful for payment intent: ${paymentIntentId}`);
+            } else {
+              logger.warn(`Callback failed for payment intent: ${paymentIntentId}`, {
+                status: callbackResponse.status,
+              });
+            }
+          } catch (callbackError) {
+            // Don't fail the settlement if callback fails
+            logger.error(`Error calling payment callback:`, callbackError);
+          }
+        }
+
         res.json({
           success: true,
           transactionHash: settlementResult.transactionHash,
@@ -463,7 +505,49 @@ export function createFacilitatorServer(): Express {
         meter.chain
       );
 
-      if (settlementResult.success) {
+      if (settlementResult.success && settlementResult.transactionHash) {
+        // Extract paymentIntentId from paymentRequirements if present
+        const paymentIntentId = (paymentRequirements as any)?.extra?.metadata?.paymentIntentId;
+        
+        // If this is a merchant payment (has paymentIntentId), call internal callback
+        if (paymentIntentId) {
+          try {
+            const callbackUrl = `${config.x402FacilitatorUrl.replace("/facilitator", "")}/internal/x402/callback`;
+            const callbackSecret = process.env.X402_CALLBACK_SECRET;
+            
+            // Extract token from requirements or use default
+            const token = (paymentRequirements as any)?.extra?.name || "xUSDC";
+            // Convert atomic amount back to token units (6 decimals for USDC)
+            const amount = Number(validationResult.amount || "0") / 1_000_000;
+            
+            const callbackResponse = await fetch(callbackUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(callbackSecret ? { "X-Callback-Secret": callbackSecret } : {}),
+              },
+              body: JSON.stringify({
+                paymentIntentId,
+                token,
+                amount,
+                txHash: settlementResult.transactionHash,
+                timestamp: new Date().toISOString(),
+              }),
+            });
+
+            if (callbackResponse.ok) {
+              logger.info(`Callback successful for payment intent: ${paymentIntentId}`);
+            } else {
+              logger.warn(`Callback failed for payment intent: ${paymentIntentId}`, {
+                status: callbackResponse.status,
+              });
+            }
+          } catch (callbackError) {
+            // Don't fail the settlement if callback fails
+            logger.error(`Error calling payment callback:`, callbackError);
+          }
+        }
+
         res.json({
           success: true,
           transactionHash: settlementResult.transactionHash,
