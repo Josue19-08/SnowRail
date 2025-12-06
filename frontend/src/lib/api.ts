@@ -620,3 +620,57 @@ export async function getCurrentUser(): Promise<{
     } as AuthResponse,
   };
 }
+
+/**
+ * Dashboard API
+ */
+
+import type { DashboardData } from "../types/dashboard-types.js";
+
+/**
+ * Get dashboard data for authenticated company
+ */
+export async function getDashboard(): Promise<{
+  success: true;
+  data: DashboardData;
+} | {
+  success: false;
+  error: { error: string; message: string };
+}> {
+  const token = getAuthToken();
+
+  if (!token) {
+    return {
+      success: false,
+      error: {
+        error: "UNAUTHORIZED",
+        message: "Please log in to view dashboard",
+      },
+    };
+  }
+
+  const response = await fetch(`${API_BASE}/api/dashboard`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const responseData = await response.json();
+
+  if (!response.ok) {
+    return {
+      success: false,
+      error: {
+        error: responseData.error || "FETCH_ERROR",
+        message: responseData.message || "Failed to fetch dashboard data",
+      },
+    };
+  }
+
+  return {
+    success: true,
+    data: responseData as DashboardData,
+  };
+}

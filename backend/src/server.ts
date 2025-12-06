@@ -234,6 +234,25 @@ console.log("💵 Price per request: $0.10 USDC");
 // Register authentication routes
 registerAuthRoutes(app);
 
+// Register merchant API routes (for inbound payments)
+import { registerMerchantRoutes } from "./api/merchantRoutes.js";
+if (config.merchantApiEnabled) {
+  registerMerchantRoutes(app);
+  console.log("✅ Merchant API enabled");
+}
+
+// Register internal routes (callbacks, webhooks)
+import { registerInternalRoutes } from "./api/internalRoutes.js";
+registerInternalRoutes(app);
+
+// Register dashboard routes (protected)
+import { registerDashboardRoutes } from "./api/dashboardRoutes.js";
+registerDashboardRoutes(app);
+
+// Register mock routes for testing (protected)
+import { registerMockRoutes } from "./api/mockRoutes.js";
+registerMockRoutes(app);
+
 // Register SnowRail payroll API (x402-protected) under /api
 registerPayrollRoutes(app);
 
