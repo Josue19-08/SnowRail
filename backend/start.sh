@@ -5,13 +5,15 @@ echo "🔍 Debugging deployment paths..."
 echo "📂 PWD: $(pwd)"
 echo "📂 SCRIPT location: ${BASH_SOURCE[0]}"
 
-# Try multiple possible locations
+# Try multiple possible locations (order matters - try most likely first)
 POSSIBLE_PATHS=(
-  "$(pwd)/backend/dist/server.js"
-  "$(pwd)/dist/server.js"
-  "/opt/render/project/backend/dist/server.js"
+  "$(pwd)/dist/server.js"  # Correct location after tsconfig fix
+  "$(pwd)/dist/src/server.js"  # Fallback for old structure
   "/opt/render/project/src/backend/dist/server.js"
+  "/opt/render/project/src/backend/dist/src/server.js"
+  "/opt/render/project/backend/dist/server.js"
   "$(dirname "${BASH_SOURCE[0]}")/dist/server.js"
+  "$(dirname "${BASH_SOURCE[0]}")/dist/src/server.js"
 )
 
 SERVER_PATH=""
