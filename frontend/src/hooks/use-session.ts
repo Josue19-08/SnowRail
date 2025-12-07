@@ -15,10 +15,16 @@ export function getToken(): string | null {
 
 /**
  * Save token to localStorage
+ * @param token - The token to save
+ * @param notify - Whether to dispatch the auth-storage-change event (default: true)
  */
-export function setToken(token: string): void {
+export function setToken(token: string, notify: boolean = true): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(TOKEN_KEY, token);
+  // Dispatch custom event to notify other components of token change
+  if (notify) {
+    window.dispatchEvent(new Event("auth-storage-change"));
+  }
 }
 
 /**
@@ -27,6 +33,8 @@ export function setToken(token: string): void {
 export function clearToken(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
+  // Dispatch custom event to notify other components of token change
+  window.dispatchEvent(new Event("auth-storage-change"));
 }
 
 /**

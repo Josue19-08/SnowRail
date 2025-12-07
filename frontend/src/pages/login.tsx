@@ -20,8 +20,9 @@ export function LoginPage() {
     if (success) {
       setSuccessMessage("Sign in successful! Redirecting...");
       // Wait a moment to show success message before redirect
+      // The auth state will be updated automatically via storage event
       setTimeout(() => {
-        navigate("/");
+        navigate("/", { replace: true });
       }, 1000);
     }
     return success;

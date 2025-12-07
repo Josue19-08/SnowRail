@@ -3,7 +3,7 @@
  * Main hook for managing authentication state and operations
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { signup, login, getCurrentUser } from "../lib/api.js";
 import { getToken, setToken, clearToken, isTokenValid } from "./use-session.js";
 import { translateErrorMessage } from "../utils/error-messages.js";
@@ -29,17 +29,30 @@ export function useAuth(): UseAuthReturn {
   const [company, setCompany] = useState<Company | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isCheckingRef = useRef(false);
 
   // Check authentication status
-  const checkAuth = useCallback(async () => {
-    setIsLoading(true);
+  const checkAuth = useCallback(async (skipLoading: boolean = false) => {
+    // Prevent concurrent checks
+    if (isCheckingRef.current) {
+      return;
+    }
+    isCheckingRef.current = true;
+
+    // Don't set loading state if we're just syncing and already have auth state
+    if (!skipLoading) {
+      setIsLoading(true);
+    }
     setError(null);
 
     const token = getToken();
     if (!token || !isTokenValid()) {
-      setIsLoading(false);
+      if (!skipLoading) {
+        setIsLoading(false);
+      }
       setUser(null);
       setCompany(null);
+      isCheckingRef.current = false;
       return;
     }
 
@@ -48,7 +61,11 @@ export function useAuth(): UseAuthReturn {
       if (result.success) {
         setUser(result.data.user);
         setCompany(result.data.company);
-        setToken(result.data.token); // Refresh token if needed
+        // Only update token if it changed, and notify to sync other instances
+        const currentToken = getToken();
+        if (currentToken !== result.data.token) {
+          setToken(result.data.token, true); // Notify other components
+        }
       } else {
         // Token is invalid, clear it
         clearToken();
@@ -61,7 +78,10 @@ export function useAuth(): UseAuthReturn {
       setUser(null);
       setCompany(null);
     } finally {
-      setIsLoading(false);
+      if (!skipLoading) {
+        setIsLoading(false);
+      }
+      isCheckingRef.current = false;
     }
   }, []);
 
@@ -73,7 +93,8 @@ export function useAuth(): UseAuthReturn {
     try {
       const result = await login(data);
       if (result.success) {
-        setToken(result.data.token);
+        // Set token and notify other components (like AppRoutes) to sync state
+        setToken(result.data.token, true);
         setUser(result.data.user);
         setCompany(result.data.company);
         setIsLoading(false);
@@ -105,7 +126,8 @@ export function useAuth(): UseAuthReturn {
     try {
       const result = await signup(data);
       if (result.success) {
-        setToken(result.data.token);
+        // Set token and notify other components (like AppRoutes) to sync state
+        setToken(result.data.token, true);
         setUser(result.data.user);
         setCompany(result.data.company);
         setIsLoading(false);
@@ -137,9 +159,36 @@ export function useAuth(): UseAuthReturn {
     setError(null);
   }, []);
 
-  // Check auth on mount
+  // Check auth on mount and listen for storage changes
   useEffect(() => {
     checkAuth();
+
+    // Listen for storage changes (e.g., when token is set in another tab/component)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "snowrail_token") {
+        checkAuth();
+      }
+    };
+
+    // Listen for custom storage event (for same-tab updates)
+    // Skip loading state to avoid UI flickering when syncing after login
+    const handleCustomStorageChange = () => {
+      // Only check auth if we don't already have authenticated state
+      // Check token directly from localStorage instead of React state
+      const token = getToken();
+      if (token && isTokenValid() && (!user || !company)) {
+        // Only sync if we have a valid token but no user/company state
+        checkAuth(true); // Skip loading state to avoid UI flicker
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("auth-storage-change", handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("auth-storage-change", handleCustomStorageChange);
+    };
   }, [checkAuth]);
 
   return {
