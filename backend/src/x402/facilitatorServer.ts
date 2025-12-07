@@ -5,6 +5,15 @@ import { getCurrentNetworkConfig } from "../config/networkConfig.js";
 import { logger } from "../utils/logger.js";
 import { getMeter, MeterConfig } from "./metering.js";
 
+// Type alias for Fetch API Response to avoid conflict with Express Response
+type FetchResponse = {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  text(): Promise<string>;
+  json(): Promise<any>;
+};
+
 /**
  * x402 Facilitator Server
  * Implements a real x402 facilitator that validates and settles payments on-chain
@@ -269,7 +278,7 @@ export function createFacilitatorRouter(): Router {
                 txHash: settlementResult.transactionHash,
                 timestamp: new Date().toISOString(),
               }),
-            })) as globalThis.Response;
+            })) as unknown as FetchResponse;
 
             if (callbackResponse.ok) {
               logger.info(`Callback successful for payment intent: ${paymentIntentId}`);
@@ -533,7 +542,7 @@ export function createFacilitatorServer(): Express {
                 txHash: settlementResult.transactionHash,
                 timestamp: new Date().toISOString(),
               }),
-            })) as globalThis.Response;
+            })) as unknown as FetchResponse;
 
             if (callbackResponse.ok) {
               logger.info(`Callback successful for payment intent: ${paymentIntentId}`);
