@@ -33,19 +33,14 @@ dotenv.config();
 const app: Express = express();
 app.use(express.json());
 
-const defaultCorsOrigins = [
-  "http://localhost:3000",
-  "https://snowrail.vercel.app",
-  "https://snowrail-production.up.railway.app",
-];
+const defaultCorsOrigins = ["http://localhost:3000"];
 
-const allowedOrigins = new Set(
-  (process.env.CORS_ALLOWED_ORIGINS || "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-    .concat(defaultCorsOrigins),
-);
+const envCorsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set([...defaultCorsOrigins, ...envCorsOrigins]);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
