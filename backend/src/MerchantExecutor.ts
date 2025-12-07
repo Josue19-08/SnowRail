@@ -5,6 +5,15 @@ import type {
 } from 'x402/types';
 import { ethers } from 'ethers';
 
+// Type alias for Fetch API Response to avoid conflict with Express Response
+type FetchResponse = {
+  ok: boolean;
+  status: number;
+  statusText: string;
+  text(): Promise<string>;
+  json(): Promise<any>;
+};
+
 const DEFAULT_FACILITATOR_URL = 'https://x402.org/facilitator';
 
 const TRANSFER_AUTH_TYPES = {
@@ -562,7 +571,7 @@ export class MerchantExecutor {
         paymentPayload: payload,
         paymentRequirements: this.requirements,
       }),
-    })) as globalThis.Response;
+    })) as unknown as FetchResponse;
 
     if (!fetchResponse.ok) {
       const text = await fetchResponse.text();
