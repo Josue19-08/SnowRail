@@ -88,7 +88,7 @@ const EXPLORER_URL = process.env.EXPLORER_URL;
 const CHAIN_ID = process.env.CHAIN_ID
   ? Number.parseInt(process.env.CHAIN_ID, 10)
   : undefined;
-const AI_PROVIDER = (process.env.AI_PROVIDER || 'openai').toLowerCase();
+const AI_PROVIDER = process.env.AI_PROVIDER?.toLowerCase() || undefined;
 const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL;
 const EIGENAI_BASE_URL =
   process.env.EIGENAI_BASE_URL || 'https://eigenai.eigencloud.xyz/v1';
@@ -118,22 +118,26 @@ const SUPPORTED_NETWORKS: Network[] = [
   'solana-devnet',
 ];
 
-// Validate environment variables
-if (AI_PROVIDER === 'openai') {
-  if (!OPENAI_API_KEY) {
-    console.error('❌ OPENAI_API_KEY is required when AI_PROVIDER=openai');
-    process.exit(1);
-  }
-} else if (AI_PROVIDER === 'eigenai') {
-  if (!EIGENAI_API_KEY && !OPENAI_API_KEY) {
-    console.error('❌ EIGENAI_API_KEY (or OPENAI_API_KEY fallback) is required when AI_PROVIDER=eigenai');
+// Validate environment variables (AI is optional)
+if (AI_PROVIDER) {
+  if (AI_PROVIDER === 'openai') {
+    if (!OPENAI_API_KEY) {
+      console.warn('⚠️  OPENAI_API_KEY not set. AI features will be disabled.');
+      console.warn('   Set OPENAI_API_KEY in environment to enable AI features.');
+    }
+  } else if (AI_PROVIDER === 'eigenai') {
+    if (!EIGENAI_API_KEY && !OPENAI_API_KEY) {
+      console.warn('⚠️  EIGENAI_API_KEY (or OPENAI_API_KEY fallback) not set. AI features will be disabled.');
+      console.warn('   Set EIGENAI_API_KEY in environment to enable AI features.');
+    }
+  } else {
+    console.error(
+      `❌ AI_PROVIDER "${AI_PROVIDER}" is not supported. Supported providers: openai, eigenai`
+    );
     process.exit(1);
   }
 } else {
-  console.error(
-    `❌ AI_PROVIDER "${AI_PROVIDER}" is not supported. Supported providers: openai, eigenai`
-  );
-  process.exit(1);
+  console.log('ℹ️  AI_PROVIDER not configured. AI features will be disabled.');
 }
 
 if (!PAY_TO_ADDRESS) {
@@ -170,26 +174,43 @@ if (settlementMode === 'direct' && !PRIVATE_KEY) {
   process.exit(1);
 }
 
-const exampleService = new ExampleService({
-  provider: AI_PROVIDER === 'eigenai' ? 'eigenai' : 'openai',
-  apiKey: AI_PROVIDER === 'openai' ? OPENAI_API_KEY : undefined,
-  baseUrl:
-    AI_PROVIDER === 'eigenai'
-      ? EIGENAI_BASE_URL
-      : OPENAI_BASE_URL || undefined,
-  defaultHeaders:
-    AI_PROVIDER === 'eigenai'
-      ? { 'x-api-key': (EIGENAI_API_KEY || OPENAI_API_KEY)! }
-      : undefined,
-  payToAddress: PAY_TO_ADDRESS,
-  network: resolvedNetwork,
-  model:
-    AI_MODEL ??
-    (AI_PROVIDER === 'eigenai' ? 'gpt-oss-120b-f16' : 'gpt-4o-mini'),
-  temperature: AI_TEMPERATURE ?? 0.7,
-  maxTokens: AI_MAX_TOKENS ?? 500,
-  seed: AI_PROVIDER === 'eigenai' ? AI_SEED : undefined,
-});
+// Create ExampleService only if AI_PROVIDER is configured and has required credentials
+let exampleService: ExampleService | null = null;
+if (AI_PROVIDER) {
+  const hasOpenAICreds = AI_PROVIDER === 'openai' && OPENAI_API_KEY;
+  const hasEigenAICreds = AI_PROVIDER === 'eigenai' && (EIGENAI_API_KEY || OPENAI_API_KEY);
+  
+  if (hasOpenAICreds || hasEigenAICreds) {
+    try {
+      exampleService = new ExampleService({
+        provider: AI_PROVIDER === 'eigenai' ? 'eigenai' : 'openai',
+        apiKey: AI_PROVIDER === 'openai' ? OPENAI_API_KEY : undefined,
+        baseUrl:
+          AI_PROVIDER === 'eigenai'
+            ? EIGENAI_BASE_URL
+            : OPENAI_BASE_URL || undefined,
+        defaultHeaders:
+          AI_PROVIDER === 'eigenai'
+            ? { 'x-api-key': (EIGENAI_API_KEY || OPENAI_API_KEY)! }
+            : undefined,
+        payToAddress: PAY_TO_ADDRESS,
+        network: resolvedNetwork,
+        model:
+          AI_MODEL ??
+          (AI_PROVIDER === 'eigenai' ? 'gpt-oss-120b-f16' : 'gpt-4o-mini'),
+        temperature: AI_TEMPERATURE ?? 0.7,
+        maxTokens: AI_MAX_TOKENS ?? 500,
+        seed: AI_PROVIDER === 'eigenai' ? AI_SEED : undefined,
+      });
+      console.log(`✅ AI service initialized with provider: ${AI_PROVIDER}`);
+    } catch (error) {
+      console.warn('⚠️  Failed to initialize AI service:', error);
+      console.warn('   AI features will be disabled.');
+    }
+  } else {
+    console.warn(`⚠️  AI_PROVIDER=${AI_PROVIDER} but missing required API keys. AI features disabled.`);
+  }
+}
 
 // Initialize the example service (replace with your own service)
 const merchantOptions: MerchantExecutorOptions = {
@@ -210,7 +231,7 @@ const merchantOptions: MerchantExecutorOptions = {
 
 const merchantExecutor = new MerchantExecutor(merchantOptions);
 
-// Initialize treasury controller with agent and executor
+// Initialize treasury controller with agent and executor (service can be null)
 initializeTreasuryController(exampleService, merchantExecutor);
 
 if (settlementMode === 'direct') {
@@ -303,6 +324,14 @@ app.get('/agent/identity', (req, res) => {
  */
 app.post('/process', async (req, res) => {
   try {
+    // Check if AI service is available
+    if (!exampleService) {
+      return res.status(503).json({
+        error: 'AI service not available',
+        message: 'AI_PROVIDER is not configured or missing required API keys. Please configure AI_PROVIDER and API keys to use this endpoint.',
+      });
+    }
+
     console.log('\n📥 Received request');
     console.log('Request body:', JSON.stringify(req.body, null, 2));
 

@@ -27,7 +27,7 @@ let merchantExecutor: MerchantExecutor | null = null;
  * Initialize the controller with service dependencies
  */
 export function initializeTreasuryController(
-  service: ExampleService,
+  service: ExampleService | null,
   executor: MerchantExecutor
 ): void {
   exampleService = service;
@@ -77,8 +77,17 @@ export async function testContract(
   res: Response
 ): Promise<void> {
   try {
-    if (!exampleService || !merchantExecutor) {
+    if (!merchantExecutor) {
       throw new Error("Treasury controller not initialized");
+    }
+    
+    if (!exampleService) {
+      res.status(503).json({
+        success: false,
+        error: "AI service not available",
+        message: "AI_PROVIDER is not configured or missing required API keys. Please configure AI_PROVIDER and API keys to use this endpoint.",
+      });
+      return;
     }
 
     logger.info("🧪 Contract test requested via agent");
