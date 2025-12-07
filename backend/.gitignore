@@ -28,3 +28,9 @@ npm-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+.env.local
+.env.*.local
