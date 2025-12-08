@@ -8,18 +8,20 @@
     "create-x402": "./cli.js"
   },
   "scripts": {
-    "build": "npx prisma generate && tsc",
-    "start": "npx prisma migrate deploy && node --max-old-space-size=1024 dist/server.js",
-    "start:prod": "npx prisma migrate deploy && NODE_ENV=production node --max-old-space-size=512 dist/server.js",
-    "dev": "tsc && node dist/server.js",
+    "prisma:setup": "node scripts/setup-prisma-provider.js",
+    "build": "npm run prisma:setup && npx prisma generate && tsc",
+    "start": "npm run prisma:setup && npx prisma migrate deploy && node --max-old-space-size=1024 dist/server.js",
+    "start:prod": "npm run prisma:setup && npx prisma migrate deploy && NODE_ENV=production node --max-old-space-size=512 dist/server.js",
+    "dev": "npm run prisma:setup && npx prisma db push --skip-generate && npx prisma generate && tsc && node dist/server.js",
     "facilitator": "tsc && node dist/facilitator.js",
     "facilitator:dev": "tsc && node dist/facilitator.js",
     "test": "npm run build && node dist/tests/integration/testClient.js",
     "test:shell": "bash tests/scripts/test-request.sh",
     "clean": "rm -rf dist",
-    "prisma:migrate": "npx prisma migrate dev --name init",
-    "prisma:migrate:deploy": "npx prisma migrate deploy",
-    "prisma:generate": "npx prisma generate"
+    "prisma:migrate": "npm run prisma:setup && npx prisma migrate dev",
+    "prisma:push": "npm run prisma:setup && npx prisma db push",
+    "prisma:migrate:deploy": "npm run prisma:setup && npx prisma migrate deploy",
+    "prisma:generate": "npm run prisma:setup && npx prisma generate"
   },
   "keywords": [
     "x402",

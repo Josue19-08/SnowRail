@@ -224,3 +224,4 @@ function PayrollDetail({ payrollId, onBack }: PayrollDetailProps) {
 }
 
 export default PayrollDetail;
+

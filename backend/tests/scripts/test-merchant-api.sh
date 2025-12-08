@@ -31,3 +31,4 @@ echo "🚀 Running merchant API tests..."
 echo ""
 node dist/tests/integration/test-merchant-api.js
 
+

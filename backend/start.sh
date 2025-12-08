@@ -49,6 +49,23 @@ echo "📂 Changed to: $(pwd)"
 
 # Run migrations if DATABASE_URL is set
 if [ -n "$DATABASE_URL" ]; then
+  # Find backend directory and setup Prisma provider
+  echo "🔄 Setting up Prisma provider..."
+  BACKEND_DIR=""
+  if [ -f "scripts/setup-prisma-provider.js" ]; then
+    BACKEND_DIR="$(pwd)"
+  elif [ -f "../scripts/setup-prisma-provider.js" ]; then
+    BACKEND_DIR="$(cd .. && pwd)"
+  elif [ -f "../../scripts/setup-prisma-provider.js" ]; then
+    BACKEND_DIR="$(cd ../.. && pwd)"
+  fi
+  
+  if [ -n "$BACKEND_DIR" ]; then
+    cd "$BACKEND_DIR" && node scripts/setup-prisma-provider.js && cd "$SERVER_DIR"
+  else
+    echo "⚠️  WARNING: Could not find setup-prisma-provider.js, skipping provider setup"
+  fi
+  
   echo "🔄 Running Prisma migrations..."
   # Find prisma directory (could be in parent or current)
   if [ -f "prisma/schema.prisma" ]; then
@@ -68,4 +85,3 @@ fi
 # Start server
 echo "🚀 Starting server from: $SERVER_PATH"
 exec node --max-old-space-size=512 "$SERVER_PATH"
-
