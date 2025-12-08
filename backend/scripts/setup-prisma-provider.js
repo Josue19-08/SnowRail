@@ -17,6 +17,7 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '..', '.env') });
 
 const schemaPath = join(__dirname, '..', 'prisma', 'schema.prisma');
+const migrationLockPath = join(__dirname, '..', 'prisma', 'migrations', 'migration_lock.toml');
 const databaseUrl = process.env.DATABASE_URL || 'file:./prisma/dev.db';
 
 // Detect provider from DATABASE_URL
@@ -48,5 +49,25 @@ if (currentProvider !== provider) {
   console.log(`   DATABASE_URL: ${databaseUrl.substring(0, 60)}${databaseUrl.length > 60 ? '...' : ''}`);
 } else {
   console.log(`ℹ️  Prisma provider already set to: ${provider}`);
+}
+
+// Update migration_lock.toml if it exists and provider doesn't match
+try {
+  if (readFileSync(migrationLockPath, 'utf-8')) {
+    const lockContent = readFileSync(migrationLockPath, 'utf-8');
+    const lockProviderMatch = lockContent.match(/provider\s*=\s*"([^"]*)"/);
+    const lockProvider = lockProviderMatch ? lockProviderMatch[1] : null;
+    
+    if (lockProvider && lockProvider !== provider) {
+      const updatedLock = lockContent.replace(
+        /provider\s*=\s*"[^"]*"/,
+        `provider = "${provider}"`
+      );
+      writeFileSync(migrationLockPath, updatedLock, 'utf-8');
+      console.log(`✅ Migration lock updated: ${lockProvider} → ${provider}`);
+    }
+  }
+} catch (error) {
+  // migration_lock.toml doesn't exist yet, that's fine
 }
 
