@@ -137,6 +137,9 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
       if (!formData.payment.amount || parseFloat(formData.payment.amount) <= 0) {
         throw new Error("Payment amount must be greater than 0");
       }
+      if (!formData.payment.recipient || formData.payment.recipient.trim() === "") {
+        throw new Error("Recipient address is required for on-chain payments. Please provide a blockchain address (e.g., 0x...).");
+      }
 
       // Convert amount to cents
       const amountInCents = Math.round(parseFloat(formData.payment.amount) * 100);
@@ -190,16 +193,6 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-3xl">
-        {onBack && (
-          <button 
-            className="flex items-center gap-2 text-teal-600 hover:text-teal-900 transition-colors font-medium mb-8" 
-            onClick={onBack}
-          >
-            <ArrowLeft size={20} />
-            Back to Dashboard
-          </button>
-        )}
-
         <div>
           <div className="card overflow-hidden">
             <div className="p-8 border-b border-teal-100 flex items-center gap-4 bg-gradient-to-r from-teal-50 to-white">
@@ -397,7 +390,7 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
-                        <Hash size={14} className="text-teal-600" /> Recipient Address (Optional)
+                        <Hash size={14} className="text-teal-600" /> Recipient Address (Required for On-Chain Payments)
                       </label>
                       <input
                         className="w-full px-4 py-3 rounded-lg font-mono text-sm"
@@ -405,7 +398,11 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
                         value={formData.payment.recipient}
                         onChange={(e) => handleInputChange("payment", "recipient", e.target.value)}
                         placeholder="0x..."
+                        required
                       />
+                      <p className="text-xs text-teal-600 mt-1">
+                        Blockchain address where the payment will be sent. Required for on-chain transaction processing.
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-teal-800">Description (Optional)</label>
@@ -466,35 +463,60 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
                   {result && (
                     <div className="space-y-8">
                       <div>
-                        <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-5 pb-2 border-b border-teal-100">Progress Steps</h4>
-                        <ul className="space-y-4">
+                        <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-6 pb-3 border-b border-teal-200">Progress Steps</h4>
+                        <div className="space-y-3">
                           {[
-                            { label: "Payroll Created", status: result.steps.payroll_created },
-                            { label: "Payments Created", status: result.steps.payments_created },
-                            { label: "Treasury Checked", status: result.steps.treasury_checked },
-                            { label: "On-Chain Requested", status: result.steps.onchain_requested },
-                            { label: "On-Chain Executed", status: result.steps.onchain_executed },
-                            { label: "Rail Processed", status: result.steps.rail_processed },
+                            { label: "Payroll Created", status: result.steps.payroll_created, icon: "📋" },
+                            { label: "Payments Created", status: result.steps.payments_created, icon: "💳" },
+                            { label: "Treasury Checked", status: result.steps.treasury_checked, icon: "💰" },
+                            { label: "On-Chain Requested", status: result.steps.onchain_requested, icon: "⛓️" },
+                            { label: "On-Chain Executed", status: result.steps.onchain_executed, icon: "✅" },
+                            { label: "Rail Processed", status: result.steps.rail_processed, icon: "🚂" },
                           ].map((item, idx) => (
-                            <li key={idx} className="flex items-center gap-4">
-                              {item.status ? (
-                                <CheckCircle2 size={20} className="text-green-600 shrink-0" />
-                              ) : (
-                                <div className="w-5 h-5 rounded-full border-2 border-teal-200 shrink-0"></div>
-                              )}
-                              <span className={item.status ? "text-teal-900 font-medium" : "text-teal-500"}>
-                                {item.label}
-                              </span>
-                            </li>
+                            <div 
+                              key={idx} 
+                              className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
+                                item.status 
+                                  ? "bg-green-50 border-2 border-green-200 shadow-sm" 
+                                  : "bg-teal-50/50 border-2 border-teal-100"
+                              }`}
+                            >
+                              <div className={`flex items-center justify-center w-10 h-10 rounded-full shrink-0 ${
+                                item.status 
+                                  ? "bg-green-100" 
+                                  : "bg-teal-100"
+                              }`}>
+                                {item.status ? (
+                                  <CheckCircle2 size={24} className="text-green-600" />
+                                ) : (
+                                  <span className="text-xl">{item.icon}</span>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <span className={`text-base font-semibold ${
+                                  item.status 
+                                    ? "text-green-800" 
+                                    : "text-teal-600"
+                                }`}>
+                                  {item.label}
+                                </span>
+                                {item.status && (
+                                  <p className="text-xs text-green-600 mt-0.5">Completed</p>
+                                )}
+                              </div>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
 
-                      {((result.transactions?.request_tx_hashes?.length || 0) > 0 || (result.transactions?.execute_tx_hashes?.length || 0) > 0) && (
+                      {/* Transactions Section */}
+                      {result.transactions && (
+                        ((result.transactions.request_tx_hashes && result.transactions.request_tx_hashes.length > 0) ||
+                         (result.transactions.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0)) ? (
                         <div>
                           <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-4 pb-2 border-b border-teal-100">Transactions</h4>
                           <div className="space-y-4">
-                            {result.transactions?.request_tx_hashes && result.transactions.request_tx_hashes.length > 0 && (
+                            {result.transactions.request_tx_hashes && result.transactions.request_tx_hashes.length > 0 && (
                               <div>
                                 <h5 className="text-xs font-semibold text-teal-600 uppercase tracking-wider mb-2">Request Transactions</h5>
                                 <div className="space-y-2">
@@ -513,7 +535,7 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
                                 </div>
                               </div>
                             )}
-                            {result.transactions?.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0 && (
+                            {result.transactions.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0 && (
                               <div>
                                 <h5 className="text-xs font-semibold text-teal-600 uppercase tracking-wider mb-2">Execute Transactions</h5>
                                 <div className="space-y-2">
@@ -534,7 +556,14 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
                             )}
                           </div>
                         </div>
-                      )}
+                      ) : (result.steps.onchain_requested || result.steps.onchain_executed) && (
+                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-800">
+                            <AlertCircle size={16} className="inline mr-2" />
+                            On-chain steps completed but no transaction hashes were returned. Check backend logs for details.
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>
