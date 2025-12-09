@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { executePayroll, getPaymentProofFromFacilitator, checkFacilitatorHealth } from "../lib/api";
+import { getApiBase } from "../utils/api-config.js";
 import type { MeteringInfo } from "../App";
 import { CreditCard, CheckCircle2, AlertCircle, Loader2, X, ArrowRight, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 
@@ -12,12 +13,13 @@ type PaymentFlowProps = {
 
 type FlowStep = "review" | "getting-proof" | "validating" | "executing" | "success";
 
-const FACILITATOR_URL = import.meta.env.VITE_FACILITATOR_URL?.trim() || "/facilitator";
-
 function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCancel }: PaymentFlowProps) {
   const [step, setStep] = useState<FlowStep>("review");
   const [error, setError] = useState<string | null>(null);
   const [facilitatorStatus, setFacilitatorStatus] = useState<"checking" | "online" | "offline">("checking");
+
+  // Use full API URL for facilitator (not relative path)
+  const FACILITATOR_URL = import.meta.env.VITE_FACILITATOR_URL?.trim() || `${getApiBase()}/facilitator`;
 
   // Check facilitator status on mount
   useEffect(() => {
@@ -26,7 +28,7 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
       setFacilitatorStatus(isHealthy ? "online" : "offline");
     };
     checkFacilitator();
-  }, []);
+  }, [FACILITATOR_URL]);
 
   const handleGetPaymentProof = async () => {
     setStep("getting-proof");

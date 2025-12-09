@@ -2,7 +2,7 @@
  * Main App component with routing
  */
 
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "./hooks/use-auth.js";
 import { ProtectedRoute } from "./components/auth/protected-route.js";
@@ -29,6 +29,7 @@ export type { MeteringInfo };
  */
 function DashboardWithPaymentFlow() {
   const [paymentRequired, setPaymentRequired] = useState<MeteringInfo | null>(null);
+  const navigate = useNavigate();
 
   const handlePaymentRequired = (metering: MeteringInfo) => {
     setPaymentRequired(metering);
@@ -36,7 +37,8 @@ function DashboardWithPaymentFlow() {
 
   const handlePaymentSuccess = () => {
     setPaymentRequired(null);
-    // Payroll executed successfully - user can see results
+    // Navigate to agent identity page to see the executed payroll
+    navigate("/agent-identity");
   };
 
   const handlePaymentCancel = () => {
