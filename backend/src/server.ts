@@ -33,7 +33,12 @@ dotenv.config();
 const app: Express = express();
 app.use(express.json());
 
-const defaultCorsOrigins = ["http://localhost:3000", "https://app.snowrail.xyz"];
+// CORS Configuration
+const defaultCorsOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173", // Vite default port
+  "https://app.snowrail.xyz", // Production frontend
+];
 
 const envCorsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
   .split(",")
@@ -42,12 +47,18 @@ const envCorsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
 
 const allowedOrigins = new Set([...defaultCorsOrigins, ...envCorsOrigins]);
 
+// CORS middleware - must be before other routes
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  
+  // Check if origin is allowed
   if (origin && allowedOrigins.has(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
     res.header("Vary", "Origin");
   }
+  
+  // Always set these headers for preflight requests
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, X-PAYMENT, Authorization",
@@ -56,7 +67,9 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
   );
+  res.header("Access-Control-Max-Age", "86400"); // 24 hours
 
+  // Handle preflight requests
   if (req.method === "OPTIONS") {
     res.sendStatus(204);
     return;
