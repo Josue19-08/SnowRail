@@ -4,8 +4,7 @@
 
 export default {
   plugins: {
-    // Uncomment after installing dependencies:
-    // tailwindcss: {},
-    // autoprefixer: {},
+    tailwindcss: {},
+    autoprefixer: {},
   },
 }
