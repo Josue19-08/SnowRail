@@ -3,7 +3,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useAuth } from "./hooks/use-auth.js";
 import { ProtectedRoute } from "./components/auth/protected-route.js";
 import { LoginPage } from "./pages/login.js";
@@ -74,8 +74,8 @@ function AppRoutes() {
           isLoading ? (
             <div className="min-h-screen flex items-center justify-center">
               <div className="text-center">
-                <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-500 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-teal-700">Loading...</p>
+                <div className="w-8 h-8 border-4 border-electric-blue border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-electric-blue">Loading...</p>
               </div>
             </div>
           ) : isAuthenticated ? (
@@ -151,12 +151,19 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const showBackButton = location.pathname !== "/" && location.pathname !== "/treasury-dashboard";
 
   return (
-    <>
-      <ParticleBackground />
-      <div className="app min-h-screen text-slate-900 font-sans">
+    <div className="relative w-full min-h-screen text-white overflow-hidden selection:bg-snow-red selection:text-white bg-navy-900">
+      {/* Background Layers */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <ParticleBackground />
+        {/* Aurora Gradients */}
+        <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-snow-red/20 rounded-full blur-[120px] animate-blob mix-blend-screen opacity-50" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-electric-blue/15 rounded-full blur-[120px] animate-blob animation-delay-2000 mix-blend-screen opacity-50" />
+      </div>
+
+      <div className="app min-h-screen font-sans relative z-10">
         {/* Header */}
-        <header className="header sticky top-0 z-50 backdrop-blur-lg bg-gradient-to-r from-teal-50/95 via-white/95 to-teal-50/95 border-b border-teal-200/50 shadow-sm">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-50 backdrop-blur-md bg-navy-900/70 border-b border-white/5 shadow-sm">
+          <div className="container mx-auto px-4 h-20 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {showBackButton && (
                 <div className="flex-shrink-0">
@@ -165,16 +172,16 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               )}
               <Link
                 to="/"
-                className="logo flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity no-underline hover:no-underline group"
+                className="flex items-center gap-2 cursor-pointer group"
                 aria-label="SnowRail home"
               >
-                <span className="logo-icon text-2xl group-hover:scale-110 transition-transform">❄️</span>
-                <span className="logo-text font-bold text-xl tracking-tight text-teal-900">SnowRail</span>
+                <img src="/snowrail_logo.png" alt="SnowRail Logo" className="w-10 h-10 object-contain hover:drop-shadow-[0_0_10px_rgba(0,212,255,0.5)] transition-all duration-300" />
+                <span className="font-bold text-xl tracking-tight text-white group-hover:text-electric-blue transition-colors">SnowRail</span>
               </Link>
             </div>
-            <div className="header-meta flex items-center gap-3">
-              <span className="chain-badge inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-100/80 border border-teal-200 text-sm font-medium text-teal-700 hover:bg-teal-100 transition-colors">
-                <span className="chain-dot w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <div className="header-meta flex items-center gap-4">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm font-medium text-electric-blue hover:bg-white/10 transition-colors backdrop-blur-sm">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 Avalanche C-Chain
               </span>
               <UserMenu />
@@ -183,18 +190,22 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Main Content */}
-        <main className="main py-8">
-          <div className="container mx-auto px-4 max-w-5xl">{children}</div>
+        <main className="main py-12">
+          <div className="container mx-auto px-4 max-w-6xl">{children}</div>
         </main>
 
         {/* Footer */}
-        <footer className="footer py-8 bg-white border-t border-slate-200 mt-auto">
-          <div className="container mx-auto px-4 text-center text-slate-500 text-sm">
-            <p>Powered by x402 Protocol • Built on Avalanche</p>
+        <footer className="footer py-8 bg-navy-900/50 backdrop-blur-md border-t border-white/5 mt-auto">
+          <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
+            <p className="flex items-center justify-center gap-2">
+              <span>Powered by x402 Protocol</span>
+              <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+              <span>Built on Avalanche</span>
+            </p>
           </div>
         </footer>
       </div>
-    </>
+    </div>
   );
 }
 
