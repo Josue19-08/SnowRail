@@ -3,6 +3,8 @@ import { executePayroll, getPaymentProofFromFacilitator, checkFacilitatorHealth 
 import { getApiBase } from "../utils/api-config.js";
 import type { MeteringInfo } from "../App";
 import { CreditCard, CheckCircle2, AlertCircle, Loader2, X, ArrowRight, ShieldCheck, Wifi, WifiOff } from "lucide-react";
+import { SpotlightCard } from "./ui/spotlight-card";
+import { motion } from "framer-motion";
 
 type PaymentFlowProps = {
   metering: MeteringInfo;
@@ -82,18 +84,18 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
 
   return (
     <div className="max-w-xl mx-auto py-12">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <SpotlightCard className="bg-navy-900 border border-white/10 overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
+        <div className="bg-navy-800/80 p-6 text-white flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg">
-              <CreditCard className="text-red-400" size={24} />
+            <div className="p-2 bg-red-500/10 rounded-lg">
+              <CreditCard className="text-red-500" size={24} />
             </div>
             <div>
               <h2 className="text-lg font-bold">Payment Required</h2>
-              <p className="text-slate-400 text-sm">x402 Protocol Protected</p>
+              <p className="text-gray-400 text-sm">x402 Protocol Protected</p>
             </div>
-              </div>
+          </div>
           
           {/* Facilitator Status Badge */}
           <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
@@ -101,7 +103,7 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
               ? 'bg-green-500/10 border-green-500/20 text-green-400' 
               : facilitatorStatus === 'offline'
               ? 'bg-red-500/10 border-red-500/20 text-red-400'
-              : 'bg-slate-700 border-slate-600 text-slate-400'
+              : 'bg-white/5 border-white/10 text-gray-400'
           }`}>
             {facilitatorStatus === 'checking' ? (
               <Loader2 size={10} className="animate-spin" />
@@ -116,84 +118,104 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
 
         <div className="p-8">
           {/* Metering Info */}
-          <div className="mb-8 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div className="mb-8 bg-navy-800/50 rounded-xl border border-white/10 overflow-hidden">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
               <div className="flex items-center gap-2">
-                <span className="bg-slate-200 text-slate-600 text-xs font-mono px-2 py-0.5 rounded">8004</span>
-                <span className="text-sm font-medium text-slate-700">{metering.resource}</span>
+                <span className="bg-white/10 text-gray-300 text-xs font-mono px-2 py-0.5 rounded border border-white/10">8004</span>
+                <span className="text-sm font-medium text-white">{metering.resource}</span>
               </div>
             </div>
 
             <div className="p-4 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 text-sm">Price</span>
-                <span className="text-lg font-bold text-slate-900">
-                  {metering.price} <span className="text-sm font-normal text-slate-500">{metering.asset}</span>
+                <span className="text-gray-400 text-sm">Price</span>
+                <span className="text-lg font-bold text-white">
+                  {metering.price} <span className="text-sm font-normal text-gray-400">{metering.asset}</span>
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-slate-500 text-sm">Network</span>
-                <span className="text-sm font-medium text-slate-900 bg-slate-200/50 px-2 py-0.5 rounded">
+                <span className="text-gray-400 text-sm">Network</span>
+                <span className="text-sm font-medium text-white bg-white/5 px-2 py-0.5 rounded border border-white/10">
                   {metering.chain}
                 </span>
               </div>
               {metering.description && (
-                <div className="pt-3 mt-3 border-t border-slate-100">
-                  <p className="text-sm text-slate-600 italic">{metering.description}</p>
-          </div>
-        )}
+                <div className="pt-3 mt-3 border-t border-white/10">
+                  <p className="text-sm text-gray-400 italic">{metering.description}</p>
+                </div>
+              )}
             </div>
           </div>
 
-        {/* Status Messages */}
+          {/* Status Messages */}
           <div className="min-h-[60px] flex items-center justify-center mb-8">
-        {step === "getting-proof" && (
-              <div className="flex flex-col items-center gap-2 text-slate-600">
-                <Loader2 className="animate-spin text-blue-500" size={28} />
+            {step === "getting-proof" && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center gap-2 text-gray-300"
+              >
+                <Loader2 className="animate-spin text-electric-blue" size={28} />
                 <span className="text-sm font-medium">Getting proof from facilitator...</span>
-          </div>
-        )}
+              </motion.div>
+            )}
 
-        {step === "validating" && (
-              <div className="flex flex-col items-center gap-2 text-slate-600">
+            {step === "validating" && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center gap-2 text-gray-300"
+              >
                 <ShieldCheck className="animate-pulse text-purple-500" size={28} />
                 <span className="text-sm font-medium">Validating payment signature...</span>
-          </div>
-        )}
+              </motion.div>
+            )}
 
-        {step === "executing" && (
-              <div className="flex flex-col items-center gap-2 text-slate-600">
+            {step === "executing" && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center gap-2 text-gray-300"
+              >
                 <Loader2 className="animate-spin text-green-500" size={28} />
                 <span className="text-sm font-medium">Executing payroll...</span>
-          </div>
-        )}
+              </motion.div>
+            )}
 
-        {step === "success" && (
-              <div className="flex flex-col items-center gap-2 text-green-600">
+            {step === "success" && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center gap-2 text-green-400"
+              >
                 <CheckCircle2 size={32} />
                 <span className="text-sm font-bold">Success! Redirecting...</span>
-          </div>
-        )}
+              </motion.div>
+            )}
 
             {step === "review" && !error && (
-              <div className="text-center text-slate-500 text-sm">
+              <div className="text-center text-gray-500 text-sm">
                 Ready to process payment via facilitator
               </div>
             )}
 
             {error && (
-              <div className="flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 rounded-lg border border-red-100 w-full">
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 px-4 py-3 bg-red-500/10 text-red-400 rounded-lg border border-red-500/20 w-full"
+              >
                 <AlertCircle size={20} className="shrink-0" />
                 <span className="text-sm">{error}</span>
-              </div>
+              </motion.div>
             )}
           </div>
 
-        {/* Actions */}
+          {/* Actions */}
           {step === "review" && (
             <div className="grid grid-cols-2 gap-4">
               <button
-                className="py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                className="py-3 px-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                 onClick={onCancel}
                 disabled={facilitatorStatus === "checking"}
               >
@@ -201,7 +223,7 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
                 Cancel
               </button>
               <button
-                className="py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
+                className="py-3 px-4 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-medium transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed hover:scale-[1.02]"
                 onClick={handleGetPaymentProof}
                 disabled={facilitatorStatus === "checking"}
               >
@@ -214,12 +236,12 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
         </div>
 
         {/* Footer info */}
-        <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
-          <p className="text-xs text-slate-500">
-            <strong>Agent Flow:</strong> Automated validation via x402 facilitator.
+        <div className="bg-navy-800/50 p-4 text-center border-t border-white/5">
+          <p className="text-xs text-gray-500">
+            <strong className="text-gray-400">Agent Flow:</strong> Automated validation via x402 facilitator.
           </p>
         </div>
-      </div>
+      </SpotlightCard>
     </div>
   );
 }
