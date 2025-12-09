@@ -51,14 +51,34 @@ const allowedOrigins = new Set([...defaultCorsOrigins, ...envCorsOrigins]);
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Check if origin is allowed
+  // Handle preflight requests FIRST - always respond to OPTIONS
+  if (req.method === "OPTIONS") {
+    // Check if origin is allowed
+    if (origin && allowedOrigins.has(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Access-Control-Allow-Credentials", "true");
+    }
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept, X-PAYMENT, Authorization",
+    );
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+    );
+    res.header("Access-Control-Max-Age", "86400"); // 24 hours
+    res.sendStatus(204);
+    return;
+  }
+  
+  // For actual requests, check if origin is allowed
   if (origin && allowedOrigins.has(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
     res.header("Access-Control-Allow-Credentials", "true");
     res.header("Vary", "Origin");
   }
   
-  // Always set these headers for preflight requests
+  // Always set these headers
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, X-PAYMENT, Authorization",
@@ -67,13 +87,6 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,PATCH,DELETE,OPTIONS",
   );
-  res.header("Access-Control-Max-Age", "86400"); // 24 hours
-
-  // Handle preflight requests
-  if (req.method === "OPTIONS") {
-    res.sendStatus(204);
-    return;
-  }
 
   next();
 });
