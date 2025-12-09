@@ -37,6 +37,7 @@ model OutboundPayment {
   currency  String
   status    String   @default("PENDING")
   recipient String?  // Wallet address or identifier
+  txHash    String?  // Transaction hash from blockchain (0x + 64 hex chars)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

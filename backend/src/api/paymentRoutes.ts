@@ -177,6 +177,12 @@ export function registerPaymentRoutes(app: Express) {
           });
         }
 
+        // Validate recipient for on-chain payments
+        if (!paymentRequest.payment.recipient) {
+          logger.warn(`[${requestId}] No recipient address provided. On-chain payments will be skipped.`);
+          // Continue processing - Rail can still work without recipient
+        }
+
         // Step 1: Create payroll
         logger.info(`[${requestId}] Step 1: Creating payroll...`);
         try {
@@ -240,30 +246,56 @@ export function registerPaymentRoutes(app: Express) {
 
         // Step 4: Request payments on-chain
         logger.info(`[${requestId}] Step 4: Requesting payments on-chain...`);
-        try {
-          const requestTxHashes = await requestPayrollPayments(payrollId!);
-          transactions.request_tx_hashes = requestTxHashes;
-          steps.onchain_requested = true;
-          logger.info(`[${requestId}] Payments requested on-chain. TXs: ${requestTxHashes.join(", ")}`);
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Unknown error";
-          logger.error(`[${requestId}] Failed to request payments on-chain:`, error);
-          errors.push({ step: "onchain_requested", error: errorMsg });
-          // Continue - we can still process through Rail
+        if (!paymentRequest.payment.recipient) {
+          logger.warn(`[${requestId}] Skipping on-chain payments: no recipient address provided`);
+          errors.push({ 
+            step: "onchain_requested", 
+            error: "Recipient address is required for on-chain payments. Please provide a blockchain address in the payment.recipient field." 
+          });
+        } else {
+          try {
+            const requestTxHashes = await requestPayrollPayments(payrollId!);
+            if (requestTxHashes.length > 0) {
+              transactions.request_tx_hashes = requestTxHashes;
+              steps.onchain_requested = true;
+              logger.info(`[${requestId}] Payments requested on-chain. TXs: ${requestTxHashes.join(", ")}`);
+            } else {
+              logger.warn(`[${requestId}] No transaction hashes returned from requestPayrollPayments`);
+              errors.push({ step: "onchain_requested", error: "No transactions were created. Check if payment has a valid recipient address." });
+            }
+          } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : "Unknown error";
+            logger.error(`[${requestId}] Failed to request payments on-chain:`, error);
+            errors.push({ step: "onchain_requested", error: errorMsg });
+            // Continue - we can still process through Rail
+          }
         }
 
         // Step 5: Execute payments on-chain
         logger.info(`[${requestId}] Step 5: Executing payments on-chain...`);
-        try {
-          const executeTxHashes = await executePayrollPayments(payrollId!);
-          transactions.execute_tx_hashes = executeTxHashes;
-          steps.onchain_executed = true;
-          logger.info(`[${requestId}] Payments executed on-chain. TXs: ${executeTxHashes.join(", ")}`);
-        } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Unknown error";
-          logger.error(`[${requestId}] Failed to execute payments on-chain:`, error);
-          errors.push({ step: "onchain_executed", error: errorMsg });
-          // Continue - we can still process through Rail
+        if (!paymentRequest.payment.recipient) {
+          logger.warn(`[${requestId}] Skipping on-chain execution: no recipient address provided`);
+          errors.push({ 
+            step: "onchain_executed", 
+            error: "Recipient address is required for on-chain payments. Please provide a blockchain address in the payment.recipient field." 
+          });
+        } else {
+          try {
+            const executeTxHashes = await executePayrollPayments(payrollId!);
+            if (executeTxHashes.length > 0) {
+              transactions.execute_tx_hashes = executeTxHashes;
+              steps.onchain_executed = true;
+              logger.info(`[${requestId}] Payments executed on-chain. TXs: ${executeTxHashes.join(", ")}`);
+            } else {
+              logger.warn(`[${requestId}] No transaction hashes returned from executePayrollPayments`);
+              errors.push({ step: "onchain_executed", error: "No transactions were created. Check if payment has a valid recipient address." });
+            }
+          } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : "Unknown error";
+            logger.error(`[${requestId}] Failed to execute payments on-chain:`, error);
+            errors.push({ step: "onchain_executed", error: errorMsg });
+            // Continue - we can still process through Rail
+          }
         }
 
         // Step 6: Process through Rail
@@ -368,12 +400,27 @@ export function registerPaymentRoutes(app: Express) {
         // (Rail is optional if accounts aren't configured)
         const isSuccess = steps.onchain_executed || steps.rail_processed || (steps.onchain_requested && errors.length === 0);
         
+        // Always include transactions object if it has any data, even if arrays are empty
+        const transactionsToReturn = 
+          (transactions.request_tx_hashes && transactions.request_tx_hashes.length > 0) ||
+          (transactions.execute_tx_hashes && transactions.execute_tx_hashes.length > 0)
+            ? transactions
+            : undefined;
+
+        logger.info(`[${requestId}] Returning response with transactions:`, {
+          hasRequestHashes: !!(transactions.request_tx_hashes && transactions.request_tx_hashes.length > 0),
+          hasExecuteHashes: !!(transactions.execute_tx_hashes && transactions.execute_tx_hashes.length > 0),
+          requestHashesCount: transactions.request_tx_hashes?.length || 0,
+          executeHashesCount: transactions.execute_tx_hashes?.length || 0,
+          transactionsToReturn: transactionsToReturn ? "included" : "undefined",
+        });
+
         const response: PaymentResponse = {
           success: isSuccess,
           payrollId: payrollId!,
           status: finalPayroll?.status || PayrollStatus.FAILED,
           steps,
-          transactions: Object.keys(transactions).length > 0 ? transactions : undefined,
+          transactions: transactionsToReturn,
           rail: Object.keys(railResult).length > 0 ? railResult : undefined,
           errors: errors.length > 0 ? errors : undefined,
         };

@@ -86,6 +86,12 @@ export async function requestPayrollPayments(payrollId: string): Promise<string[
         tokenAddress
       );
 
+      // Validate transaction hash format (should be 0x + 64 hex characters = 66 total)
+      if (!txHash || !txHash.startsWith('0x') || txHash.length !== 66) {
+        logger.error(`Invalid transaction hash format for payment ${payment.id}: ${txHash}`);
+        throw new Error(`Invalid transaction hash: expected 66 characters (0x + 64 hex), got ${txHash?.length || 0}`);
+      }
+
       transactionHashes.push(txHash);
       
       // Update payment with transaction hash
@@ -93,7 +99,7 @@ export async function requestPayrollPayments(payrollId: string): Promise<string[
         where: { id: payment.id },
         data: {
           status: PaymentStatus.ONCHAIN_REQUESTED,
-          // Store tx hash in a metadata field if available, or log it
+          txHash: txHash, // Store the full transaction hash
         },
       });
 
@@ -177,13 +183,20 @@ export async function executePayrollPayments(payrollId: string): Promise<string[
         tokenAddress
       );
 
+      // Validate transaction hash format (should be 0x + 64 hex characters = 66 total)
+      if (!txHash || !txHash.startsWith('0x') || txHash.length !== 66) {
+        logger.error(`Invalid transaction hash format for payment ${payment.id}: ${txHash}`);
+        throw new Error(`Invalid transaction hash: expected 66 characters (0x + 64 hex), got ${txHash?.length || 0}`);
+      }
+
       transactionHashes.push(txHash);
       
-      // Update payment status
+      // Update payment status and transaction hash
       await prisma.outboundPayment.update({
         where: { id: payment.id },
         data: {
           status: PaymentStatus.ONCHAIN_PAID,
+          txHash: txHash, // Store the full transaction hash
         },
       });
 
