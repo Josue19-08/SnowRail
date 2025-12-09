@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Zap, DollarSign, Info } from "lucide-react";
 import { getToken } from "../../hooks/use-session.js";
 import { getApiBase } from "../../utils/api-config.js";
+import { SpotlightCard } from "../ui/spotlight-card";
 
 const API_BASE = getApiBase();
 
@@ -125,22 +126,22 @@ export function PaymentSimulator({
   const quickAmounts = [5, 10, 25, 50, 100];
 
   return (
-    <div className="card p-6">
+    <SpotlightCard className="p-6 bg-navy-800/30">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-teal-100 rounded-lg" style={{ color: "#0d9488" }}>
+        <div className="p-2 bg-electric-blue/10 rounded-lg text-electric-blue">
           <Zap size={20} />
         </div>
-        <h3 className="text-lg font-semibold text-teal-900">Simulate External Payment</h3>
+        <h3 className="text-lg font-semibold text-white">Simulate External Payment</h3>
       </div>
 
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-4 p-3 bg-navy-900/50 border border-electric-blue/20 rounded-lg">
         <div className="flex items-start gap-2">
-          <Info size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-blue-700">
-            <p className="font-medium mb-1">Example: External Merchant Payment</p>
-            <p className="text-xs">
+          <Info size={16} className="text-electric-blue mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-gray-300">
+            <p className="font-medium mb-1 text-white">Example: External Merchant Payment</p>
+            <p className="text-xs text-gray-400">
               This simulates how another company would pay you using the Merchant API. It uses the real flow:{" "}
-              <code className="mx-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-800 font-mono text-xs">
+              <code className="mx-1 px-1.5 py-0.5 bg-navy-800/70 rounded text-electric-blue font-mono text-xs border border-electric-blue/20">
                 POST /merchant/payments
               </code>
               → x402 payment → callback confirmation.
@@ -152,7 +153,7 @@ export function PaymentSimulator({
       <div className="space-y-4">
         {/* Amount Input */}
         <div>
-          <label className="block text-sm font-medium text-teal-900 mb-2">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
             Amount
           </label>
           <div className="flex gap-2">
@@ -162,20 +163,20 @@ export function PaymentSimulator({
               min="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-teal-900"
+              className="flex-1 px-4 py-2 bg-navy-900/50 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-electric-blue focus:border-electric-blue text-white placeholder-gray-500"
               placeholder="10.5"
               disabled={isProcessing}
             />
             <select
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              className="px-4 py-2 border border-teal-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-teal-900 bg-white"
+              className="px-4 py-2 bg-navy-900/50 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-electric-blue focus:border-electric-blue text-white"
               disabled={isProcessing}
             >
-              <option value="xUSDC">xUSDC</option>
-              <option value="USDC">USDC</option>
-              <option value="xUSDT">xUSDT</option>
-              <option value="USDT">USDT</option>
+              <option value="xUSDC" className="bg-navy-900">xUSDC</option>
+              <option value="USDC" className="bg-navy-900">USDC</option>
+              <option value="xUSDT" className="bg-navy-900">xUSDT</option>
+              <option value="USDT" className="bg-navy-900">USDT</option>
             </select>
           </div>
 
@@ -187,7 +188,7 @@ export function PaymentSimulator({
                 type="button"
                 onClick={() => setAmount(quickAmount.toString())}
                 disabled={isProcessing}
-                className="px-3 py-1 text-xs bg-teal-50 hover:bg-teal-100 text-teal-700 rounded-lg border border-teal-200 transition-colors disabled:opacity-50"
+                className="px-3 py-1 text-xs bg-navy-900/50 hover:bg-navy-900/70 text-electric-blue rounded-lg border border-electric-blue/30 hover:border-electric-blue/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ${quickAmount}
               </button>
@@ -197,14 +198,14 @@ export function PaymentSimulator({
 
         {/* Error Message */}
         {error && (
-          <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
+          <div className="p-3 bg-red-500/10 text-red-400 text-sm rounded-lg border border-red-500/20">
             {error}
           </div>
         )}
 
         {/* Success Message */}
         {success && (
-          <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg border border-green-200">
+          <div className="p-3 bg-green-500/10 text-green-400 text-sm rounded-lg border border-green-500/20">
             {success}
           </div>
         )}
@@ -213,7 +214,7 @@ export function PaymentSimulator({
         <button
           onClick={handleSimulatePayment}
           disabled={isProcessing}
-          className="btn btn-primary w-full"
+          className="w-full py-3 px-4 rounded-xl font-medium text-white shadow-lg transition-all duration-300 bg-gradient-to-r from-electric-blue to-purple-600 hover:shadow-electric-blue/25 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
         >
           {isProcessing ? (
             <>
@@ -228,6 +229,6 @@ export function PaymentSimulator({
           )}
         </button>
       </div>
-    </div>
+    </SpotlightCard>
   );
 }
