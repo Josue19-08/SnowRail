@@ -3,6 +3,7 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "./hooks/use-auth.js";
 import { ProtectedRoute } from "./components/auth/protected-route.js";
 import { LoginPage } from "./pages/login.js";
@@ -10,6 +11,7 @@ import { SignupPage } from "./pages/signup.js";
 import Dashboard from "./pages/dashboard.js";
 import LegacyDashboard from "./components/Dashboard.js";
 import PaymentForm from "./components/PaymentForm";
+import PaymentFlow from "./components/PaymentFlow";
 import ContractTest from "./components/ContractTest";
 import { AgentIdentity } from "./components/AgentIdentity";
 import { ParticleBackground } from "./components/ParticleBackground";
@@ -20,6 +22,40 @@ import type { MeteringInfo } from "./lib/api.js";
 
 // Re-export MeteringInfo for backward compatibility
 export type { MeteringInfo };
+
+/**
+ * Dashboard with Payment Flow Handler
+ * Wraps LegacyDashboard to handle payment flow state
+ */
+function DashboardWithPaymentFlow() {
+  const [paymentRequired, setPaymentRequired] = useState<MeteringInfo | null>(null);
+
+  const handlePaymentRequired = (metering: MeteringInfo) => {
+    setPaymentRequired(metering);
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentRequired(null);
+    // Payroll executed successfully - user can see results
+  };
+
+  const handlePaymentCancel = () => {
+    setPaymentRequired(null);
+  };
+
+  if (paymentRequired) {
+    return (
+      <PaymentFlow
+        metering={paymentRequired}
+        meterId={paymentRequired.meterId || "payroll_execute"}
+        onSuccess={handlePaymentSuccess}
+        onCancel={handlePaymentCancel}
+      />
+    );
+  }
+
+  return <LegacyDashboard onPaymentRequired={handlePaymentRequired} />;
+}
 
 /**
  * Root route component that handles authentication check and routing
@@ -43,7 +79,7 @@ function AppRoutes() {
           ) : isAuthenticated ? (
             <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
               <AppLayout>
-                <LegacyDashboard onPaymentRequired={() => {}} />
+                <DashboardWithPaymentFlow />
               </AppLayout>
             </ProtectedRoute>
           ) : (
