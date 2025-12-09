@@ -112,7 +112,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
             <AppLayout>
-              <PaymentForm onBack={() => window.history.back()} />
+              <PaymentForm />
             </AppLayout>
           </ProtectedRoute>
         }

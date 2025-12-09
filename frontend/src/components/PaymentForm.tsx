@@ -51,7 +51,7 @@ type PaymentResult = {
   }>;
 };
 
-function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (payrollId: string) => void }) {
+function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentRequired, setPaymentRequired] = useState<MeteringInfo | null>(null);
