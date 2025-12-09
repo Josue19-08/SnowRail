@@ -2,6 +2,8 @@ import { useState } from "react";
 import { processPayment } from "../lib/api";
 import type { MeteringInfo } from "../App";
 import { ArrowLeft, CreditCard, Loader2, CheckCircle2, AlertCircle, Wallet, MapPin, User, Mail, Phone, ExternalLink, Hash, DollarSign } from "lucide-react";
+import { SpotlightCard } from "./ui/spotlight-card";
+import { motion } from "framer-motion";
 
 type PaymentFormData = {
   customer: {
@@ -190,24 +192,31 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
     }
   };
 
+  const inputClass = "w-full px-4 py-3 rounded-lg bg-navy-900/50 border border-white/10 text-white focus:border-electric-blue focus:ring-1 focus:ring-electric-blue transition-all placeholder-gray-600";
+  const labelClass = "text-sm font-medium text-gray-300 flex items-center gap-2";
+
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-3xl">
-        <div>
-          <div className="card overflow-hidden">
-            <div className="p-8 border-b border-teal-100 flex items-center gap-4 bg-gradient-to-r from-teal-50 to-white">
-              <div className="p-3 bg-teal-100 rounded-xl" style={{color: '#0d9488'}}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <SpotlightCard className="overflow-hidden bg-navy-800/50">
+            <div className="p-8 border-b border-white/10 flex items-center gap-4 bg-white/5">
+              <div className="p-3 bg-electric-blue/10 rounded-xl text-electric-blue">
                 <CreditCard size={28} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-teal-900">Process Payment</h2>
-                <p className="text-teal-700">Rail API + Blockchain Integration</p>
+                <h2 className="text-2xl font-bold text-white">Process Payment</h2>
+                <p className="text-gray-400">Rail API + Blockchain Integration</p>
               </div>
             </div>
 
             <div className="p-8">
               {error && (
-                <div className="mb-6 p-5 bg-red-50 text-red-700 rounded-xl border border-red-200 flex items-start gap-3">
+                <div className="mb-6 p-5 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20 flex items-start gap-3">
                   <AlertCircle className="shrink-0 mt-0.5" size={20} />
                   <div>
                     <h4 className="font-bold">Error Processing Payment</h4>
@@ -217,11 +226,11 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
               )}
 
               {paymentRequired && (
-                <div className="mb-6 p-5 bg-yellow-50 text-yellow-800 rounded-xl border border-yellow-200 flex items-start gap-3">
+                <div className="mb-6 p-5 bg-yellow-500/10 text-yellow-400 rounded-xl border border-yellow-500/20 flex items-start gap-3">
                   <AlertCircle className="shrink-0 mt-0.5" size={20} />
                   <div>
                     <h4 className="font-bold">Payment Required: {paymentRequired.price} {paymentRequired.asset}</h4>
-                    <p className="text-sm mt-1 text-yellow-700">Using demo-token for testnet execution.</p>
+                    <p className="text-sm mt-1 text-yellow-300/70">Using demo-token for testnet execution.</p>
                   </div>
                 </div>
               )}
@@ -229,16 +238,16 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
               <form onSubmit={handleSubmit} className="space-y-10">
           {/* Customer Information */}
                 <div>
-                  <h3 className="text-base font-bold text-teal-900 uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-teal-100">
-                    <User size={18} className="text-teal-600" />
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-white/10">
+                    <User size={18} className="text-electric-blue" />
                     Customer Information
                   </h3>
                   
                   <div className="grid md:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800">First Name</label>
+                      <label className={labelClass}>First Name</label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg"
+                        className={inputClass}
                         type="text"
                         value={formData.customer.first_name}
                         onChange={(e) => handleInputChange("customer", "first_name", e.target.value)}
@@ -246,9 +255,9 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800">Last Name</label>
+                      <label className={labelClass}>Last Name</label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg"
+                        className={inputClass}
                         type="text"
                         value={formData.customer.last_name}
                         onChange={(e) => handleInputChange("customer", "last_name", e.target.value)}
@@ -259,11 +268,11 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                   
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
-                        <Mail size={14} className="text-teal-600" /> Email Address
+                      <label className={labelClass}>
+                        <Mail size={14} className="text-electric-blue" /> Email Address
                       </label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg"
+                        className={inputClass}
                         type="email"
                         value={formData.customer.email_address}
                         onChange={(e) => handleInputChange("customer", "email_address", e.target.value)}
@@ -271,11 +280,11 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
-                        <Phone size={14} className="text-teal-600" /> Phone Number
+                      <label className={labelClass}>
+                        <Phone size={14} className="text-electric-blue" /> Phone Number
                       </label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg"
+                        className={inputClass}
                         type="tel"
                         value={formData.customer.telephone_number}
                         onChange={(e) => handleInputChange("customer", "telephone_number", e.target.value)}
@@ -287,16 +296,16 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
 
             {/* Mailing Address */}
                 <div>
-                  <h3 className="text-base font-bold text-teal-900 uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-teal-100">
-                    <MapPin size={18} className="text-teal-600" />
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-white/10">
+                    <MapPin size={18} className="text-electric-blue" />
                     Mailing Address
                   </h3>
                   
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800">Address Line 1</label>
+                      <label className={labelClass}>Address Line 1</label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg"
+                        className={inputClass}
                         type="text"
                         value={formData.customer.mailing_address.address_line1}
                         onChange={(e) => handleInputChange("customer", "address_address_line1", e.target.value)}
@@ -306,9 +315,9 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                     
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-teal-800">City</label>
+                        <label className={labelClass}>City</label>
                         <input
-                          className="w-full px-4 py-3 rounded-lg"
+                          className={inputClass}
                           type="text"
                           value={formData.customer.mailing_address.city}
                           onChange={(e) => handleInputChange("customer", "address_city", e.target.value)}
@@ -316,9 +325,9 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-teal-800">State</label>
+                        <label className={labelClass}>State</label>
                         <input
-                          className="w-full px-4 py-3 rounded-lg"
+                          className={inputClass}
                           type="text"
                           value={formData.customer.mailing_address.state}
                           onChange={(e) => handleInputChange("customer", "address_state", e.target.value)}
@@ -329,9 +338,9 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
 
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-teal-800">Postal Code</label>
+                        <label className={labelClass}>Postal Code</label>
                         <input
-                          className="w-full px-4 py-3 rounded-lg"
+                          className={inputClass}
                           type="text"
                           value={formData.customer.mailing_address.postal_code}
                           onChange={(e) => handleInputChange("customer", "address_postal_code", e.target.value)}
@@ -339,9 +348,9 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-teal-800">Country Code</label>
+                        <label className={labelClass}>Country Code</label>
                         <input
-                          className="w-full px-4 py-3 rounded-lg"
+                          className={inputClass}
                           type="text"
                           value={formData.customer.mailing_address.country_code}
                           onChange={(e) => handleInputChange("customer", "address_country_code", e.target.value)}
@@ -355,18 +364,18 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
 
           {/* Payment Information */}
                 <div>
-                  <h3 className="text-base font-bold text-teal-900 uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-teal-100">
-                    <Wallet size={18} className="text-teal-600" />
+                  <h3 className="text-base font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-white/10">
+                    <Wallet size={18} className="text-electric-blue" />
                     Payment Details
                   </h3>
                   
                   <div className="grid md:grid-cols-2 gap-6 mb-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
-                        <DollarSign size={14} className="text-teal-600" /> Amount (USD)
+                      <label className={labelClass}>
+                        <DollarSign size={14} className="text-electric-blue" /> Amount (USD)
                       </label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg font-mono"
+                        className={`${inputClass} font-mono`}
                         type="number"
                         step="0.01"
                         min="0.01"
@@ -376,38 +385,38 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800">Currency</label>
+                      <label className={labelClass}>Currency</label>
                       <select
-                        className="w-full px-4 py-3 rounded-lg bg-white"
+                        className={inputClass}
                         value={formData.payment.currency}
                         onChange={(e) => handleInputChange("payment", "currency", e.target.value)}
                       >
-                        <option value="USD">USD</option>
+                        <option value="USD" className="bg-navy-900">USD</option>
                       </select>
                     </div>
                   </div>
                   
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
-                        <Hash size={14} className="text-teal-600" /> Recipient Address (Required for On-Chain Payments)
+                      <label className={labelClass}>
+                        <Hash size={14} className="text-electric-blue" /> Recipient Address (Required for On-Chain Payments)
                       </label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg font-mono text-sm"
+                        className={`${inputClass} font-mono text-sm`}
                         type="text"
                         value={formData.payment.recipient}
                         onChange={(e) => handleInputChange("payment", "recipient", e.target.value)}
                         placeholder="0x..."
                         required
                       />
-                      <p className="text-xs text-teal-600 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Blockchain address where the payment will be sent. Required for on-chain transaction processing.
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-teal-800">Description (Optional)</label>
+                      <label className={labelClass}>Description (Optional)</label>
                       <input
-                        className="w-full px-4 py-3 rounded-lg"
+                        className={inputClass}
                         type="text"
                         value={formData.payment.description}
                         onChange={(e) => handleInputChange("payment", "description", e.target.value)}
@@ -417,10 +426,10 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                   </div>
                 </div>
 
-                <div className="pt-8 mt-8 border-t border-teal-100">
+                <div className="pt-8 mt-8 border-t border-white/10">
                   <button
                     type="submit"
-                    className="btn btn-primary btn-large w-full"
+                    className="btn btn-primary btn-large w-full flex items-center justify-center gap-2"
                     disabled={loading}
                   >
                   {loading ? (
@@ -438,32 +447,33 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                 </div>
                 </form>
               </div>
-            </div>
+            </SpotlightCard>
+          </motion.div>
 
             {/* Results Section - Below Form */}
             {step && (
-              <div className="card overflow-hidden mt-8">
-                <div className="p-6 border-b border-teal-100 bg-teal-50">
-                  <h3 className="font-bold text-teal-900 text-xl">Payment Status</h3>
+              <SpotlightCard className="overflow-hidden mt-8 bg-navy-800/50">
+                <div className="p-6 border-b border-white/10 bg-white/5">
+                  <h3 className="font-bold text-white text-xl">Payment Status</h3>
                 </div>
                 <div className="p-8">
-                  <div className="flex items-center gap-4 mb-8 p-5 bg-teal-50 rounded-xl">
+                  <div className="flex items-center gap-4 mb-8 p-5 bg-navy-900/50 rounded-xl border border-white/5">
                     {loading ? (
-                      <Loader2 className="animate-spin text-teal-600" size={28} />
+                      <Loader2 className="animate-spin text-electric-blue" size={28} />
                     ) : result?.success ? (
-                      <CheckCircle2 className="text-green-600" size={28} />
+                      <CheckCircle2 className="text-green-500" size={28} />
                     ) : error ? (
-                      <AlertCircle className="text-red-600" size={28} />
+                      <AlertCircle className="text-red-500" size={28} />
                     ) : (
-                      <div className="w-7 h-7 rounded-full border-3 border-teal-300"></div>
+                      <div className="w-7 h-7 rounded-full border-3 border-gray-600"></div>
                     )}
-                    <span className="text-lg font-medium text-teal-900">{step}</span>
+                    <span className="text-lg font-medium text-white">{step}</span>
                   </div>
 
                   {result && (
                     <div className="space-y-8">
                       <div>
-                        <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-6 pb-3 border-b border-teal-200">Progress Steps</h4>
+                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 pb-3 border-b border-white/10">Progress Steps</h4>
                         <div className="space-y-3">
                           {[
                             { label: "Payroll Created", status: result.steps.payroll_created, icon: "📋" },
@@ -477,17 +487,17 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                               key={idx} 
                               className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
                                 item.status 
-                                  ? "bg-green-50 border-2 border-green-200 shadow-sm" 
-                                  : "bg-teal-50/50 border-2 border-teal-100"
+                                  ? "bg-green-500/10 border border-green-500/20" 
+                                  : "bg-navy-900/30 border border-white/5"
                               }`}
                             >
                               <div className={`flex items-center justify-center w-10 h-10 rounded-full shrink-0 ${
                                 item.status 
-                                  ? "bg-green-100" 
-                                  : "bg-teal-100"
+                                  ? "bg-green-500/20" 
+                                  : "bg-white/5"
                               }`}>
                                 {item.status ? (
-                                  <CheckCircle2 size={24} className="text-green-600" />
+                                  <CheckCircle2 size={24} className="text-green-500" />
                                 ) : (
                                   <span className="text-xl">{item.icon}</span>
                                 )}
@@ -495,13 +505,13 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                               <div className="flex-1">
                                 <span className={`text-base font-semibold ${
                                   item.status 
-                                    ? "text-green-800" 
-                                    : "text-teal-600"
+                                    ? "text-green-400" 
+                                    : "text-gray-500"
                                 }`}>
                                   {item.label}
                                 </span>
                                 {item.status && (
-                                  <p className="text-xs text-green-600 mt-0.5">Completed</p>
+                                  <p className="text-xs text-green-500/70 mt-0.5">Completed</p>
                                 )}
                               </div>
                             </div>
@@ -514,11 +524,11 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                         ((result.transactions.request_tx_hashes && result.transactions.request_tx_hashes.length > 0) ||
                          (result.transactions.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0)) ? (
                         <div>
-                          <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-4 pb-2 border-b border-teal-100">Transactions</h4>
+                          <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 pb-2 border-b border-white/10">Transactions</h4>
                           <div className="space-y-4">
                             {result.transactions.request_tx_hashes && result.transactions.request_tx_hashes.length > 0 && (
                               <div>
-                                <h5 className="text-xs font-semibold text-teal-600 uppercase tracking-wider mb-2">Request Transactions</h5>
+                                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Request Transactions</h5>
                                 <div className="space-y-2">
                                   {result.transactions.request_tx_hashes.map((hash, idx) => (
                                     <a
@@ -526,7 +536,7 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                                       href={`https://testnet.snowtrace.io/tx/${hash}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-3 text-sm text-teal-600 hover:text-teal-800 hover:underline truncate p-3 bg-teal-50 rounded-lg transition-colors"
+                                      className="flex items-center gap-3 text-sm text-electric-blue hover:text-white hover:underline truncate p-3 bg-navy-900/50 border border-white/5 rounded-lg transition-colors"
                                     >
                                       <ExternalLink size={16} />
                                       <span className="truncate font-mono">{hash}</span>
@@ -537,7 +547,7 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                             )}
                             {result.transactions.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0 && (
                               <div>
-                                <h5 className="text-xs font-semibold text-teal-600 uppercase tracking-wider mb-2">Execute Transactions</h5>
+                                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Execute Transactions</h5>
                                 <div className="space-y-2">
                                   {result.transactions.execute_tx_hashes.map((hash, idx) => (
                                     <a
@@ -545,7 +555,7 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                                       href={`https://testnet.snowtrace.io/tx/${hash}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-3 text-sm text-teal-600 hover:text-teal-800 hover:underline truncate p-3 bg-teal-50 rounded-lg transition-colors"
+                                      className="flex items-center gap-3 text-sm text-electric-blue hover:text-white hover:underline truncate p-3 bg-navy-900/50 border border-white/5 rounded-lg transition-colors"
                                     >
                                       <ExternalLink size={16} />
                                       <span className="truncate font-mono">{hash}</span>
@@ -557,8 +567,8 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                           </div>
                         </div>
                       ) : (result.steps.onchain_requested || result.steps.onchain_executed) && (
-                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <p className="text-sm text-yellow-800">
+                        <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                          <p className="text-sm text-yellow-400">
                             <AlertCircle size={16} className="inline mr-2" />
                             On-chain steps completed but no transaction hashes were returned. Check backend logs for details.
                           </p>
@@ -567,11 +577,10 @@ function PaymentForm({ onSuccess }: { onSuccess?: (payrollId: string) => void })
                     </div>
                   )}
                 </div>
-              </div>
+              </SpotlightCard>
             )}
-          </div>
-        </div>
       </div>
+    </div>
   );
 }
 
