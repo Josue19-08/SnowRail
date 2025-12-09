@@ -36,7 +36,8 @@ const app: Express = express();
 const defaultCorsOrigins = [
   "http://localhost:3000",
   "http://localhost:5173", // Vite default port
-  "https://app.snowrail.xyz", // Production frontend
+  "https://app.snowrail.xyz", // Production frontend (custom domain)
+  "https://snow-rail.vercel.app", // Production frontend (Vercel domain)
 ];
 
 const envCorsOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
