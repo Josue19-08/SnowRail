@@ -6,44 +6,44 @@ interface AgentIdentityTabsProps {
 }
 
 export function AgentIdentityTabs({ activeTab, onTabChange }: AgentIdentityTabsProps) {
-  const baseButtonClass = "flex-1 min-w-0 px-12 py-5 rounded-xl text-base font-semibold transition-all duration-300 flex items-center justify-center gap-3";
+  const baseButtonClass = "flex-1 min-w-0 px-6 py-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 relative z-10";
   
   return (
-    <div className="agent-identity-tabs-container flex items-stretch gap-2 mb-6 bg-gradient-to-r from-teal-50 via-teal-50/80 to-teal-50 p-2 rounded-2xl border border-teal-200/50 shadow-sm w-full">
+    <div className="flex items-stretch gap-2 mb-6 bg-navy-900/50 p-1.5 rounded-2xl border border-white/5 w-full backdrop-blur-sm">
       <button
         onClick={() => onTabChange("activity")}
         type="button"
-        className={`agent-identity-tab-button ${baseButtonClass} ${
+        className={`${baseButtonClass} ${
           activeTab === "activity"
-            ? "bg-teal-600 text-white shadow-lg shadow-teal-500/40 hover:bg-teal-700"
-            : "bg-white text-teal-700 hover:text-teal-900 hover:bg-teal-50 border border-teal-200"
+            ? "bg-electric-blue/10 text-electric-blue border border-electric-blue/30 shadow-[0_0_15px_rgba(0,212,255,0.1)]"
+            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
         }`}
       >
-        <Archive size={22} className="flex-shrink-0" />
+        <Archive size={18} className="flex-shrink-0" />
         <span className="whitespace-nowrap">Payroll History</span>
       </button>
       <button
         onClick={() => onTabChange("identity")}
         type="button"
-        className={`agent-identity-tab-button ${baseButtonClass} ${
+        className={`${baseButtonClass} ${
           activeTab === "identity"
-            ? "bg-teal-600 text-white shadow-lg shadow-teal-500/40 hover:bg-teal-700"
-            : "bg-white text-teal-700 hover:text-teal-900 hover:bg-teal-50 border border-teal-200"
+            ? "bg-purple-600/10 text-purple-400 border border-purple-500/30 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
+            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
         }`}
       >
-        <Sparkles size={22} className="flex-shrink-0" />
+        <Sparkles size={18} className="flex-shrink-0" />
         <span className="whitespace-nowrap">Agent Identity</span>
       </button>
       <button
         onClick={() => onTabChange("stats")}
         type="button"
-        className={`agent-identity-tab-button ${baseButtonClass} ${
+        className={`${baseButtonClass} ${
           activeTab === "stats"
-            ? "bg-teal-600 text-white shadow-lg shadow-teal-500/40 hover:bg-teal-700"
-            : "bg-white text-teal-700 hover:text-teal-900 hover:bg-teal-50 border border-teal-200"
+            ? "bg-snow-red/10 text-snow-red border border-snow-red/30 shadow-[0_0_15px_rgba(232,65,66,0.1)]"
+            : "text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
         }`}
       >
-        <TrendingUp size={22} className="flex-shrink-0" />
+        <TrendingUp size={18} className="flex-shrink-0" />
         <span className="whitespace-nowrap">Statistics</span>
       </button>
     </div>
