@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/use-auth.js";
 import { LogOut, ChevronDown, User, Wallet } from "lucide-react";
 import { CoreWalletButton } from "../core-wallet-button.js";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function UserMenu() {
   const navigate = useNavigate();
@@ -45,258 +46,90 @@ export function UserMenu() {
   const companyInitial = company.legalName.charAt(0).toUpperCase();
 
   return (
-    <div ref={menuRef} style={{ position: "relative" }}>
+    <div ref={menuRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          padding: "0.5rem 0.75rem",
-          paddingRight: "1rem",
-          backgroundColor: isOpen ? "#f0fdfa" : "transparent",
-          border: "1px solid",
-          borderColor: isOpen ? "#14b8a6" : "#e5e5e5",
-          borderRadius: "0.5rem",
-          cursor: "pointer",
-          transition: "all 0.2s ease",
-          fontFamily: "inherit",
-        }}
-        onMouseEnter={(e) => {
-          if (!isOpen) {
-            e.currentTarget.style.backgroundColor = "#f0fdfa";
-            e.currentTarget.style.borderColor = "#99f6e4";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isOpen) {
-            e.currentTarget.style.backgroundColor = "transparent";
-            e.currentTarget.style.borderColor = "#e5e5e5";
-          }
-        }}
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg border transition-all duration-200 ${
+          isOpen 
+            ? 'bg-white/10 border-electric-blue/50 text-white' 
+            : 'bg-transparent border-white/10 text-gray-300 hover:bg-white/5 hover:border-white/20 hover:text-white'
+        }`}
       >
         {/* Avatar */}
-        <div
-          style={{
-            width: "2rem",
-            height: "2rem",
-            backgroundColor: "#14b8a6",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ffffff",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            flexShrink: 0,
-            border: "2px solid #ffffff",
-            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          }}
-        >
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-electric-blue to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-electric-blue/20">
           {companyInitial}
         </div>
 
         {/* User info */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: "0.125rem",
-            minWidth: 0,
-          }}
-        >
-          <span
-            style={{
-              fontSize: "0.875rem",
-              fontWeight: 600,
-              color: "#134e4a",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: "12rem",
-            }}
-          >
+        <div className="flex flex-col items-start min-w-0">
+          <span className="text-sm font-semibold text-white truncate max-w-[12rem]">
             {company.legalName}
           </span>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              color: "#0d9488",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              maxWidth: "12rem",
-            }}
-          >
+          <span className="text-xs text-gray-400 truncate max-w-[12rem]">
             {user.email}
           </span>
         </div>
 
         {/* Chevron icon */}
         <ChevronDown
-          style={{
-            width: "1rem",
-            height: "1rem",
-            color: "#0d9488",
-            transition: "transform 0.2s ease",
-            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-            flexShrink: 0,
-          }}
+          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {/* Dropdown menu */}
-      {isOpen && (
-        <div
-          style={{
-            position: "absolute",
-            right: 0,
-            top: "calc(100% + 0.5rem)",
-            width: "16rem",
-            backgroundColor: "#ffffff",
-            borderRadius: "0.75rem",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            border: "1px solid #e5e5e5",
-            zIndex: 50,
-            overflow: "hidden",
-          }}
-        >
-          {/* User info section */}
-          <div
-            style={{
-              padding: "1rem",
-              borderBottom: "1px solid #e5e5e5",
-              backgroundColor: "#f9fafb",
-            }}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-[calc(100%+0.5rem)] w-72 bg-navy-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 glass-panel"
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                marginBottom: "0.75rem",
-              }}
-            >
-              <div
-                style={{
-                  width: "2.5rem",
-                  height: "2.5rem",
-                  backgroundColor: "#14b8a6",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#ffffff",
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  flexShrink: 0,
-                  border: "2px solid #ffffff",
-                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                {companyInitial}
+            {/* User info section */}
+            <div className="p-4 border-b border-white/5 bg-white/5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-electric-blue to-purple-600 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-electric-blue/20">
+                  {companyInitial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">
+                    {company.legalName}
+                  </p>
+                  <p className="text-xs text-gray-400 truncate">
+                    {user.email}
+                  </p>
+                </div>
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p
-                  style={{
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    color: "#134e4a",
-                    margin: 0,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {company.legalName}
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.75rem",
-                    color: "#0d9488",
-                    margin: "0.25rem 0 0 0",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {user.email}
-                </p>
+              
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-navy-800/50 border border-white/5 mb-3">
+                <User className="w-3.5 h-3.5 text-electric-blue" />
+                <span className="text-xs font-medium text-gray-300">
+                  Account active
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-navy-800/50 border border-white/5">
+                <Wallet className="w-3.5 h-3.5 text-electric-blue" />
+                <div className="flex-1">
+                  <CoreWalletButton variant="text" />
+                </div>
               </div>
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.5rem",
-                backgroundColor: "#ffffff",
-                borderRadius: "0.5rem",
-                border: "1px solid #e5e5e5",
-              }}
-            >
-              <User style={{ width: "0.875rem", height: "0.875rem", color: "#14b8a6" }} />
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  color: "#0f766e",
-                  fontWeight: 500,
-                }}
-              >
-                Account active
-              </span>
-            </div>
-            <div
-              style={{
-                marginTop: "0.75rem",
-                padding: "0.5rem",
-                backgroundColor: "#ffffff",
-                borderRadius: "0.5rem",
-                border: "1px solid #e5e5e5",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <Wallet style={{ width: "0.875rem", height: "0.875rem", color: "#14b8a6" }} />
-              <CoreWalletButton variant="text" />
-            </div>
-          </div>
 
-          {/* Menu items */}
-          <div style={{ padding: "0.5rem" }}>
-            <button
-              onClick={handleLogout}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                padding: "0.75rem",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-                color: "#dc2626",
-                backgroundColor: "transparent",
-                border: "none",
-                borderRadius: "0.5rem",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                fontFamily: "inherit",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#fef2f2";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
-            >
-              <LogOut style={{ width: "1rem", height: "1rem", flexShrink: 0 }} />
-              <span>Sign out</span>
-            </button>
-          </div>
-        </div>
-      )}
+            {/* Menu items */}
+            <div className="p-2">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign out</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
